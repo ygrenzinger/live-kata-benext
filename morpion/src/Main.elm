@@ -1,9 +1,11 @@
 module Main exposing (..)
+
 -- Press buttons to increment and decrement a counter.
 --
 -- Read how it works:
 --   https://guide.elm-lang.org/architecture/buttons.html
 --
+
 import Array exposing (Array)
 import Browser
 import Css exposing (..)
@@ -11,35 +13,67 @@ import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
+
+
+
 -- MAIN
+
+
 main =
     Browser.sandbox { init = init, update = update, view = view }
+
+
+
 -- MODEL
 
-type Cell = Empty | Cross | Circle
 
-type alias Row = Array Cell 
+type Cell
+    = Empty
+    | Cross
+    | Circle
 
-type alias Grid = Array Row
+
+type alias Row =
+    Array Cell
+
+
+type alias Grid =
+    Array Row
+
 
 type alias Model =
     Grid
 
+
 createGrid : Grid
-createGrid = Array.repeat 3 (Array.repeat 3 Empty)
+createGrid =
+    Array.repeat 3 (Array.repeat 3 Empty)
+
 
 init : Model
-init = createGrid
+init =
+    createGrid
+
+
 
 -- UPDATE
+
+
 type Msg
     = None
+
+
 update : Msg -> Model -> Model
-update _ model = model
+update _ model =
+    model
+
+
+
 -- VIEW
 
+
 buildCell : Cell -> Html Msg
-buildCell _ = 
+buildCell _ =
     div
         [ css
             [ display inlineBlock
@@ -55,17 +89,22 @@ buildCell _ =
         ]
         []
 
+
 buildRow : Row -> Html Msg
-buildRow row = 
-    div [ css
+buildRow row =
+    div
+        [ css
             [ height (px 100)
             ]
-    ] (Array.map buildCell row |> Array.toList)
+        ]
+        (Array.map buildCell row |> Array.toList)
+
 
 buildPage : Model -> Html Msg
 buildPage model =
     div [] (Array.map buildRow model |> Array.toList)
-        
+
+
 view : Model -> Html.Html Msg
 view model =
     buildPage model |> toUnstyled
