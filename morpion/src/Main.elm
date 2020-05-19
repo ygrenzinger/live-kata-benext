@@ -62,29 +62,17 @@ updateCell state cell =
     { cell | state = state }
 
 
-
--- Maybe a -> Maybe.map (a -> b) a -> Maybe b
-
-
-upateArrayWith : (a -> a) -> Int -> Array a -> Maybe (Array a)
-upateArrayWith f index array =
+updateArrayWith : (a -> a) -> Int -> Array a -> Array a
+updateArrayWith f index array =
     Array.get index array
         |> Maybe.map f
         |> Maybe.map (\x -> Array.set index x array)
+        |> Maybe.withDefault array
 
 
 updateRow : Int -> Row -> Row
-updateRow columnIndex row =
-    let
-        maybeCell : Maybe Cell
-        maybeCell =
-            Array.get columnIndex row
-
-        maybeUpdatedCell : Maybe Cell
-        maybeUpdatedCell =
-            Maybe.map (updateCell Cross) maybeCell
-    in
-    maybeUpdatedCell |> Maybe.map (\c -> Array.set columnIndex c row) |> Maybe.withDefault row
+updateRow =
+    updateArrayWith (updateCell Cross)
 
 
 createGrid : Grid
@@ -94,7 +82,7 @@ createGrid =
 
 updateGrid : Int -> Int -> Grid -> Grid
 updateGrid rowIndex columnIndex grid =
-    Array.get rowIndex grid
+    updateArrayWith (updateRow columnIndex) rowIndex grid
 
 
 init : Model
@@ -112,7 +100,7 @@ type Msg
 
 update : Msg -> Model -> Model
 update (Change x y) model =
-    model
+    updateGrid x y model
 
 
 
@@ -135,7 +123,14 @@ buildCell cell =
             ]
         , onClick (Change cell.x cell.y)
         ]
-        []
+        [ text
+            (if cell.state == Cross then
+                "x"
+
+             else
+                ""
+            )
+        ]
 
 
 buildRow : Row -> Html Msg
