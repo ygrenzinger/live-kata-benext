@@ -27,10 +27,17 @@ main =
 -- MODEL
 
 
-type Cell
+type CellState
     = Empty
     | Cross
     | Circle
+
+
+type alias Cell =
+    { x : Int
+    , y : Int
+    , state : CellState
+    }
 
 
 type alias Row =
@@ -45,9 +52,49 @@ type alias Model =
     Grid
 
 
+createRow : Int -> Row
+createRow rowIndex =
+    List.range 0 2 |> List.map (\columnIndex -> Cell columnIndex rowIndex Empty) |> Array.fromList
+
+
+updateCell : CellState -> Cell -> Cell
+updateCell state cell =
+    { cell | state = state }
+
+
+
+-- Maybe a -> Maybe.map (a -> b) a -> Maybe b
+
+
+upateArrayWith : (a -> a) -> Int -> Array a -> Maybe (Array a)
+upateArrayWith f index array =
+    Array.get index array
+        |> Maybe.map f
+        |> Maybe.map (\x -> Array.set index x array)
+
+
+updateRow : Int -> Row -> Row
+updateRow columnIndex row =
+    let
+        maybeCell : Maybe Cell
+        maybeCell =
+            Array.get columnIndex row
+
+        maybeUpdatedCell : Maybe Cell
+        maybeUpdatedCell =
+            Maybe.map (updateCell Cross) maybeCell
+    in
+    maybeUpdatedCell |> Maybe.map (\c -> Array.set columnIndex c row) |> Maybe.withDefault row
+
+
 createGrid : Grid
 createGrid =
-    Array.repeat 3 (Array.repeat 3 Empty)
+    List.range 0 2 |> List.map createRow |> Array.fromList
+
+
+updateGrid : Int -> Int -> Grid -> Grid
+updateGrid rowIndex columnIndex grid =
+    Array.get rowIndex grid
 
 
 init : Model
@@ -60,11 +107,11 @@ init =
 
 
 type Msg
-    = None
+    = Change Int Int
 
 
 update : Msg -> Model -> Model
-update _ model =
+update (Change x y) model =
     model
 
 
@@ -73,7 +120,7 @@ update _ model =
 
 
 buildCell : Cell -> Html Msg
-buildCell _ =
+buildCell cell =
     div
         [ css
             [ display inlineBlock
@@ -86,6 +133,7 @@ buildCell _ =
                 , borderRadius (px 10)
                 ]
             ]
+        , onClick (Change cell.x cell.y)
         ]
         []
 
