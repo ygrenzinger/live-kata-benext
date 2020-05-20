@@ -110,16 +110,22 @@ update (Change x y) model =
 
 
 -- VIEW
+-- style="display:flex;justify-content:center;align-items:center;"
 
 
 buildCell : Cell -> Html Msg
 buildCell cell =
-    span
+    div
         [ css
             [ display inlineBlock
+            , verticalAlign middle
+            , textAlign center
+            , alignItems center
             , boxSizing borderBox
             , width (px 100)
-            , height (px 100)
+            , height (pct 100)
+            , fontSize (px 50)
+            , fontWeight bold
             , border3 (px 2) solid (rgb 120 120 120)
             , hover
                 [ borderColor (rgb 255 0 0)
@@ -143,6 +149,7 @@ buildRow row =
     div
         [ css
             [ height (px 100)
+            , lineHeight (px 100)
             ]
         ]
         (Array.map buildCell row |> Array.toList)
@@ -150,7 +157,9 @@ buildRow row =
 
 buildPage : Model -> Html Msg
 buildPage model =
-    div [] (Array.map buildRow model |> Array.toList)
+    div
+        []
+        (Array.map buildRow model |> Array.toList)
 
 
 view : Model -> Html.Html Msg
