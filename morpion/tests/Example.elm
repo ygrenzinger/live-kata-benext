@@ -2,7 +2,7 @@ module Example exposing (..)
 
 import Array exposing (Array)
 import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
+import Fuzz exposing (intRange)
 import Main exposing (..)
 import Test exposing (..)
 
@@ -11,19 +11,19 @@ suite : Test
 suite =
     describe "Morpion game"
         [ describe "Grid"
-            [ test "should update grid with cross" <|
-                \_ ->
+            [ fuzz2 (intRange 0 2) (intRange 0 2) "should update grid with cross" <|
+                \x y ->
                     let
                         emptyGrid =
                             createGrid
 
                         updatedGrid =
-                            updateGrid 1 2 emptyGrid
+                            updateGrid x y emptyGrid
 
                         updatedCell =
-                            Array.get 1 updatedGrid
-                                |> Maybe.andThen (\row -> Array.get 2 row)
+                            Array.get y updatedGrid
+                                |> Maybe.andThen (\row -> Array.get x row)
                     in
-                    Expect.equal (Just (Cell 1 2 Cross)) updatedCell
+                    Expect.equal (Just (Cell x y Cross)) updatedCell
             ]
         ]

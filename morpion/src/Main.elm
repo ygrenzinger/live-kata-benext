@@ -53,8 +53,8 @@ type alias Model =
 
 
 createRow : Int -> Row
-createRow rowIndex =
-    List.range 0 2 |> List.map (\columnIndex -> Cell columnIndex rowIndex Empty) |> Array.fromList
+createRow y =
+    List.range 0 2 |> List.map (\x -> Cell x y Empty) |> Array.fromList
 
 
 updateCell : CellState -> Cell -> Cell
@@ -71,8 +71,8 @@ updateArrayWith f index array =
 
 
 updateRow : Int -> Row -> Row
-updateRow =
-    updateArrayWith (updateCell Cross)
+updateRow x row =
+    updateArrayWith (updateCell Cross) x row
 
 
 createGrid : Grid
@@ -80,9 +80,14 @@ createGrid =
     List.range 0 2 |> List.map createRow |> Array.fromList
 
 
+
+-- f : a -> b -> c
+--(f a)=>(b -> c)=> (c)
+
+
 updateGrid : Int -> Int -> Grid -> Grid
-updateGrid rowIndex columnIndex grid =
-    updateArrayWith (updateRow columnIndex) rowIndex grid
+updateGrid x y grid =
+    updateArrayWith (updateRow x) y grid
 
 
 init : Model
@@ -109,12 +114,12 @@ update (Change x y) model =
 
 buildCell : Cell -> Html Msg
 buildCell cell =
-    div
+    span
         [ css
             [ display inlineBlock
             , boxSizing borderBox
             , width (px 100)
-            , height (pct 100)
+            , height (px 100)
             , border3 (px 2) solid (rgb 120 120 120)
             , hover
                 [ borderColor (rgb 255 0 0)
