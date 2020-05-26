@@ -34,9 +34,14 @@ type CellState
 
 
 type alias Cell =
+    { position : Position
+    , state : CellState
+    }
+
+
+type alias Position =
     { x : Int
     , y : Int
-    , state : CellState
     }
 
 
@@ -54,7 +59,8 @@ type Player
 
 
 type Game
-    = Game Player Grid
+    = Running Player Grid
+    | Won Player Grid
 
 
 type alias Model =
@@ -63,7 +69,7 @@ type alias Model =
 
 createRow : Int -> Row
 createRow y =
-    List.range 0 2 |> List.map (\x -> Cell x y Empty) |> Array.fromList
+    List.range 0 2 |> List.map (\x -> Cell { x = x, y = y } Empty) |> Array.fromList
 
 
 updateCell : Player -> Cell -> Cell
@@ -104,16 +110,36 @@ createGrid =
 --(f a)=>(b -> c)=> (c)
 
 
-updateGrid : Player -> Int -> Int -> Grid -> Grid
-updateGrid player x y grid =
-    updateArrayWith (updateRow player x) y grid
+getGrid : Game -> Grid
+getGrid game =
+    case game of
+        Running _ grid ->
+            grid
+
+        Won _ grid ->
+            grid
 
 
-cellStateAt : Int -> Int -> Grid -> Maybe CellState
-cellStateAt x y grid =
-    Array.get y grid
-        |> Maybe.andThen (\row -> Array.get x row)
+updateGrid : Player -> Position -> Grid -> Grid
+updateGrid player pos grid =
+    updateArrayWith (updateRow player pos.x) pos.y grid
+
+
+cellStateAt : Position -> Grid -> Maybe CellState
+cellStateAt pos grid =
+    Array.get pos.y grid
+        |> Maybe.andThen (\row -> Array.get pos.x row)
         |> Maybe.map (\cell -> cell.state)
+
+
+getPlayer : Game -> Player
+getPlayer game =
+    case game of
+        Running player _ ->
+            player
+
+        Won player _ ->
+            player
 
 
 switchPlayer : Player -> Player
@@ -126,18 +152,29 @@ switchPlayer player =
             FirstPlayer
 
 
-playerTurn : Int -> Int -> Game -> Game
-playerTurn x y (Game player grid) =
-    if cellStateAt x y grid == Just Empty then
-        Game (switchPlayer player) (updateGrid player x y grid)
 
-    else
-        Game player grid
+-- winsPosition
+-- isPlayerWon : Player -> Grid -> Boolean
+-- isPlayerWon player grid =
+
+
+playerTurn : Position -> Game -> Game
+playerTurn pos game =
+    case game of
+        Running player grid ->
+            if cellStateAt pos grid == Just Empty then
+                Running (switchPlayer player) (updateGrid player pos grid)
+
+            else
+                Running player grid
+
+        _ ->
+            game
 
 
 init : Model
 init =
-    Game FirstPlayer createGrid
+    Running FirstPlayer createGrid
 
 
 
@@ -145,12 +182,12 @@ init =
 
 
 type Msg
-    = Change Int Int
+    = Change Position
 
 
 update : Msg -> Model -> Model
-update (Change x y) game =
-    playerTurn x y game
+update (Change pos) game =
+    playerTurn pos game
 
 
 
@@ -189,7 +226,7 @@ buildCell cell =
                 , borderRadius (px 10)
                 ]
             ]
-        , onClick (Change cell.x cell.y)
+        , onClick (Change cell.position)
         ]
         [ text <| symbolForState cell.state
         ]
@@ -206,11 +243,21 @@ buildRow row =
         (Array.map buildCell row |> Array.toList)
 
 
-buildPage : Model -> Html Msg
-buildPage (Game _ grid) =
+buildGrid : Grid -> Html Msg
+buildGrid grid =
     div
         []
         (Array.map buildRow grid |> Array.toList)
+
+
+buildPage : Model -> Html Msg
+buildPage game =
+    case game of
+        Running _ grid ->
+            buildGrid grid
+
+        Won _ grid ->
+            buildGrid grid
 
 
 view : Model -> Html.Html Msg

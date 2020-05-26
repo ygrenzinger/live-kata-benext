@@ -21,13 +21,13 @@ suite =
                             FirstPlayer
 
                         updatedGrid =
-                            updateGrid player x y emptyGrid
+                            updateGrid player { x = x, y = y } emptyGrid
 
                         updatedCell =
                             Array.get y updatedGrid
                                 |> Maybe.andThen (\row -> Array.get x row)
                     in
-                    Expect.equal (Just (Cell x y Cross)) updatedCell
+                    Expect.equal (Just (Cell { x = x, y = y } Cross)) updatedCell
             , test "should with circle because second player" <|
                 \_ ->
                     let
@@ -38,35 +38,51 @@ suite =
                             SecondPlayer
 
                         updatedGrid =
-                            updateGrid player 1 0 emptyGrid
+                            updateGrid player { x = 1, y = 0 } emptyGrid
 
                         updatedCell =
                             Array.get 0 updatedGrid
                                 |> Maybe.andThen (\row -> Array.get 1 row)
                     in
-                    Expect.equal (Just (Cell 1 0 Circle)) updatedCell
+                    Expect.equal (Just (Cell { x = 1, y = 0 } Circle)) updatedCell
             , test "should switch player" <|
                 \_ ->
                     let
-                        initGame =
-                            Game FirstPlayer createGrid
+                        game =
+                            Running FirstPlayer createGrid
+                                |> playerTurn { x = 0, y = 1 }
 
-                        (Game player _) =
-                            playerTurn 0 1 initGame
+                        player =
+                            getPlayer game
                     in
                     Expect.equal SecondPlayer player
             , test "Should not update Game state if player tries to click on a non empty cell" <|
                 \_ ->
                     let
                         initGame =
-                            Game FirstPlayer createGrid
+                            Running FirstPlayer createGrid
 
                         firstPlayerTurn =
-                            playerTurn 0 1 initGame
+                            playerTurn { x = 0, y = 1 } initGame
 
                         noChange =
-                            playerTurn 0 1 firstPlayerTurn
+                            playerTurn { x = 0, y = 1 } firstPlayerTurn
                     in
                     Expect.equal firstPlayerTurn noChange
+            , test "should stop the game when first player win" <|
+                \_ ->
+                    let
+                        game =
+                            Running FirstPlayer createGrid
+                                |> playerTurn { x = 0, y = 0 }
+                                |> playerTurn { x = 1, y = 0 }
+                                |> playerTurn { x = 0, y = 1 }
+                                |> playerTurn { x = 1, y = 1 }
+                                |> playerTurn { x = 0, y = 2 }
+
+                        grid =
+                            getGrid game
+                    in
+                    Expect.equal (Won FirstPlayer grid) game
             ]
         ]
