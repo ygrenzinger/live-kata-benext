@@ -1,9 +1,9 @@
-module Example exposing (..)
+module GameTest exposing (..)
 
 import Array exposing (Array)
 import Expect exposing (Expectation)
 import Fuzz exposing (intRange)
-import Main exposing (..)
+import Game exposing (..)
 import Test exposing (..)
 
 

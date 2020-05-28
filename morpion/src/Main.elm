@@ -9,6 +9,7 @@ module Main exposing (..)
 import Array exposing (Array)
 import Browser
 import Css exposing (..)
+import Game exposing (..)
 import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
@@ -27,149 +28,8 @@ main =
 -- MODEL
 
 
-type CellState
-    = Empty
-    | Cross
-    | Circle
-
-
-type alias Cell =
-    { position : Position
-    , state : CellState
-    }
-
-
-type alias Position =
-    { x : Int
-    , y : Int
-    }
-
-
-type alias Row =
-    Array Cell
-
-
-type alias Grid =
-    Array Row
-
-
-type Player
-    = FirstPlayer
-    | SecondPlayer
-
-
-type Game
-    = Running Player Grid
-    | Won Player Grid
-
-
 type alias Model =
     Game
-
-
-createRow : Int -> Row
-createRow y =
-    List.range 0 2 |> List.map (\x -> Cell { x = x, y = y } Empty) |> Array.fromList
-
-
-updateCell : Player -> Cell -> Cell
-updateCell player cell =
-    { cell | state = cellStateForPlayer player }
-
-
-updateArrayWith : (a -> a) -> Int -> Array a -> Array a
-updateArrayWith f index array =
-    Array.get index array
-        |> Maybe.map f
-        |> Maybe.map (\x -> Array.set index x array)
-        |> Maybe.withDefault array
-
-
-updateRow : Player -> Int -> Row -> Row
-updateRow player x row =
-    updateArrayWith (updateCell player) x row
-
-
-cellStateForPlayer : Player -> CellState
-cellStateForPlayer player =
-    case player of
-        FirstPlayer ->
-            Cross
-
-        SecondPlayer ->
-            Circle
-
-
-createGrid : Grid
-createGrid =
-    List.range 0 2 |> List.map createRow |> Array.fromList
-
-
-
--- f : a -> b -> c
---(f a)=>(b -> c)=> (c)
-
-
-getGrid : Game -> Grid
-getGrid game =
-    case game of
-        Running _ grid ->
-            grid
-
-        Won _ grid ->
-            grid
-
-
-updateGrid : Player -> Position -> Grid -> Grid
-updateGrid player pos grid =
-    updateArrayWith (updateRow player pos.x) pos.y grid
-
-
-cellStateAt : Position -> Grid -> Maybe CellState
-cellStateAt pos grid =
-    Array.get pos.y grid
-        |> Maybe.andThen (\row -> Array.get pos.x row)
-        |> Maybe.map (\cell -> cell.state)
-
-
-getPlayer : Game -> Player
-getPlayer game =
-    case game of
-        Running player _ ->
-            player
-
-        Won player _ ->
-            player
-
-
-switchPlayer : Player -> Player
-switchPlayer player =
-    case player of
-        FirstPlayer ->
-            SecondPlayer
-
-        SecondPlayer ->
-            FirstPlayer
-
-
-
--- winsPosition
--- isPlayerWon : Player -> Grid -> Boolean
--- isPlayerWon player grid =
-
-
-playerTurn : Position -> Game -> Game
-playerTurn pos game =
-    case game of
-        Running player grid ->
-            if cellStateAt pos grid == Just Empty then
-                Running (switchPlayer player) (updateGrid player pos grid)
-
-            else
-                Running player grid
-
-        _ ->
-            game
 
 
 init : Model
@@ -182,7 +42,7 @@ init =
 
 
 type Msg
-    = Change Position
+    = Change Game.Position
 
 
 update : Msg -> Model -> Model
