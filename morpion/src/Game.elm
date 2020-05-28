@@ -1,4 +1,4 @@
-module Game exposing (Cell, CellState(..), Game(..), Grid, Player(..), Position, Row, cellStateAt, cellStateForPlayer, createGrid, createRow, getGrid, getPlayer, playerTurn, switchPlayer, updateArrayWith, updateCell, updateGrid, updateRow)
+module Game exposing (Cell, CellPosition, CellState(..), Game(..), Grid, Player(..), Row, createGrid, getGrid, getPlayer, selectCell, updateGrid)
 
 import Array exposing (Array)
 
@@ -10,12 +10,12 @@ type CellState
 
 
 type alias Cell =
-    { position : Position
+    { position : CellPosition
     , state : CellState
     }
 
 
-type alias Position =
+type alias CellPosition =
     { x : Int
     , y : Int
     }
@@ -77,11 +77,6 @@ createGrid =
     List.range 0 2 |> List.map createRow |> Array.fromList
 
 
-
--- f : a -> b -> c
---(f a)=>(b -> c)=> (c)
-
-
 getGrid : Game -> Grid
 getGrid game =
     case game of
@@ -92,12 +87,12 @@ getGrid game =
             grid
 
 
-updateGrid : Player -> Position -> Grid -> Grid
+updateGrid : Player -> CellPosition -> Grid -> Grid
 updateGrid player pos grid =
     updateArrayWith (updateRow player pos.x) pos.y grid
 
 
-cellStateAt : Position -> Grid -> Maybe CellState
+cellStateAt : CellPosition -> Grid -> Maybe CellState
 cellStateAt pos grid =
     Array.get pos.y grid
         |> Maybe.andThen (\row -> Array.get pos.x row)
@@ -130,19 +125,19 @@ switchPlayer player =
 -- isPlayerWon player grid =
 
 
-columnsWinningPosition : List (List Position)
+columnsWinningPosition : List (List CellPosition)
 columnsWinningPosition =
     List.range 0 2
         |> List.map (\x -> List.range 0 2 |> List.map (\y -> { x = x, y = y }))
 
 
-rowsWinningPosition : List (List Position)
+rowsWinningPosition : List (List CellPosition)
 rowsWinningPosition =
     List.range 0 2
         |> List.map (\y -> List.range 0 2 |> List.map (\x -> { x = x, y = y }))
 
 
-diagonalsWinningPosition : List (List Position)
+diagonalsWinningPosition : List (List CellPosition)
 diagonalsWinningPosition =
     let
         leftToRight =
@@ -156,12 +151,12 @@ diagonalsWinningPosition =
     [ leftToRight, rightToLeft ]
 
 
-allWinningPositions : List (List Position)
+allWinningPositions : List (List CellPosition)
 allWinningPositions =
     List.concat [ columnsWinningPosition, rowsWinningPosition, diagonalsWinningPosition ]
 
 
-positionIsOwnedBy : Grid -> Position -> Maybe Player
+positionIsOwnedBy : Grid -> CellPosition -> Maybe Player
 positionIsOwnedBy grid position =
     case cellStateAt position grid of
         Just Cross ->
@@ -174,7 +169,7 @@ positionIsOwnedBy grid position =
             Nothing
 
 
-positionsAreOwnedBy : Grid -> List Position -> Maybe Player
+positionsAreOwnedBy : Grid -> List CellPosition -> Maybe Player
 positionsAreOwnedBy grid positions =
     let
         listMaybePlayer : List (Maybe Player)
@@ -204,27 +199,35 @@ hasWinner grid =
         |> Maybe.withDefault Nothing
 
 
-playerTurn : Position -> Game -> Game
-playerTurn pos game =
+playerTurn : CellPosition -> Player -> Grid -> Game
+playerTurn pos player grid =
+    let
+        nextPlayer =
+            switchPlayer player
+
+        updatedGame =
+            Running nextPlayer (updateGrid player pos grid)
+
+        winner =
+            hasWinner (getGrid updatedGame)
+    in
+    case winner of
+        Just _ ->
+            Won player (getGrid updatedGame)
+
+        Nothing ->
+            updatedGame
+
+
+selectCell : CellPosition -> Game -> Game
+selectCell pos game =
     case game of
-        Running player grid ->
-            let
-                updatedGame =
-                    if cellStateAt pos grid == Just Empty then
-                        Running (switchPlayer player) (updateGrid player pos grid)
+        (Running player grid) as runningGame ->
+            if cellStateAt pos grid == Just Empty then
+                playerTurn pos player grid
 
-                    else
-                        Running player grid
-
-                winner =
-                    hasWinner (getGrid updatedGame)
-            in
-            case winner of
-                Just _ ->
-                    Won player (getGrid updatedGame)
-
-                Nothing ->
-                    updatedGame
+            else
+                runningGame
 
         _ ->
             game

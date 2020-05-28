@@ -1,10 +1,10 @@
 module GameTest exposing (..)
 
-import Array exposing (Array)
-import Expect exposing (Expectation)
+import Array
+import Expect
 import Fuzz exposing (intRange)
-import Game exposing (..)
-import Test exposing (..)
+import Game exposing (Cell, CellState(..), Game(..), Player(..), createGrid, getGrid, getPlayer, selectCell, updateGrid)
+import Test exposing (Test, describe, fuzz2, test)
 
 
 suite : Test
@@ -50,7 +50,7 @@ suite =
                     let
                         game =
                             Running FirstPlayer createGrid
-                                |> playerTurn { x = 0, y = 1 }
+                                |> selectCell { x = 0, y = 1 }
 
                         player =
                             getPlayer game
@@ -63,10 +63,10 @@ suite =
                             Running FirstPlayer createGrid
 
                         firstPlayerTurn =
-                            playerTurn { x = 0, y = 1 } initGame
+                            selectCell { x = 0, y = 1 } initGame
 
                         noChange =
-                            playerTurn { x = 0, y = 1 } firstPlayerTurn
+                            selectCell { x = 0, y = 1 } firstPlayerTurn
                     in
                     Expect.equal firstPlayerTurn noChange
             , test "should stop the game when first player win" <|
@@ -74,11 +74,11 @@ suite =
                     let
                         game =
                             Running FirstPlayer createGrid
-                                |> playerTurn { x = 0, y = 0 }
-                                |> playerTurn { x = 1, y = 0 }
-                                |> playerTurn { x = 0, y = 1 }
-                                |> playerTurn { x = 1, y = 1 }
-                                |> playerTurn { x = 0, y = 2 }
+                                |> selectCell { x = 0, y = 0 }
+                                |> selectCell { x = 1, y = 0 }
+                                |> selectCell { x = 0, y = 1 }
+                                |> selectCell { x = 1, y = 1 }
+                                |> selectCell { x = 0, y = 2 }
 
                         grid =
                             getGrid game

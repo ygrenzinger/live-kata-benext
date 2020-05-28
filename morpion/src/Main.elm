@@ -6,10 +6,10 @@ module Main exposing (..)
 --   https://guide.elm-lang.org/architecture/buttons.html
 --
 
-import Array exposing (Array)
+import Array
 import Browser
 import Css exposing (..)
-import Game exposing (..)
+import Game exposing (Cell, CellPosition, CellState(..), Game(..), Grid, Player(..), Row, createGrid, selectCell)
 import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
@@ -42,12 +42,12 @@ init =
 
 
 type Msg
-    = Change Game.Position
+    = Change CellPosition
 
 
 update : Msg -> Model -> Model
 update (Change pos) game =
-    playerTurn pos game
+    selectCell pos game
 
 
 
