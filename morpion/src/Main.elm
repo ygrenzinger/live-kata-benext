@@ -111,18 +111,31 @@ buildGrid grid =
         (Array.map buildRow grid |> Array.toList)
 
 
+playerName : Player -> String
+playerName player =
+    case player of
+        CrossPlayer ->
+            "cross"
+
+        CirclePlayer ->
+            "circle"
+
+        None ->
+            ""
+
+
 buildPage : Model -> Html Msg
 buildPage game =
     case game of
-        Running _ grid ->
+        Running player grid ->
             div []
-                [ text "Running"
+                [ text ("Game running with player turn " ++ playerName player)
                 , buildGrid grid
                 ]
 
-        Won _ grid ->
+        Won player grid ->
             div []
-                [ text "Won"
+                [ text (playerName player ++ " won")
                 , buildGrid grid
                 ]
 
