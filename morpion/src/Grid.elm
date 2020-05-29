@@ -1,4 +1,4 @@
-module Grid exposing (Cell, CellPosition, CellState(..), Grid, Row, cellStateAt, createGrid, isFull, positionsAreOwnedBy, updateGrid)
+module Grid exposing (Cell, CellPosition, CellState(..), Grid, Row, allPossiblePositions, cellStateAt, createGrid, isFull, positionsAreOwnedBy, updateGrid)
 
 import Array exposing (Array)
 
@@ -39,10 +39,15 @@ updateGrid player pos grid =
     updateArrayWith (updateRow player pos.x) pos.y grid
 
 
-isFull : Grid -> Bool
-isFull grid =
+allPossiblePositions : List CellPosition
+allPossiblePositions =
     List.range 0 2
         |> List.concatMap (\y -> List.range 0 2 |> List.map (\x -> { x = x, y = y }))
+
+
+isFull : Grid -> Bool
+isFull grid =
+    allPossiblePositions
         |> List.map (cellStateAt grid)
         |> List.all ((/=) Empty)
 

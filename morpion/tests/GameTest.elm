@@ -2,19 +2,22 @@ module GameTest exposing (..)
 
 import Array
 import Expect exposing (Expectation)
-import Fuzz exposing (intRange)
+import Fuzz exposing (Fuzzer)
 import Game exposing (..)
 import Grid exposing (..)
-import Test exposing (Test, describe, fuzz2, test)
+import Random.List exposing (shuffle)
+import Shrink exposing (noShrink)
+import Test exposing (Test, describe, fuzz, test)
 
 
-
--- Composition of function
+selectCells : List CellPosition -> Game
+selectCells =
+    List.foldl selectCell (Running CrossPlayer createGrid)
 
 
 runGame : List ( Int, Int ) -> Game
 runGame =
-    List.map (\( x, y ) -> { x = x, y = y }) >> List.foldl selectCell (Running CrossPlayer createGrid)
+    List.map (\( x, y ) -> { x = x, y = y }) >> selectCells
 
 
 testWinningPosition : List ( Int, Int ) -> Expectation
@@ -24,6 +27,11 @@ testWinningPosition positions =
             runGame positions
     in
     Expect.equal (Won CrossPlayer (getGrid game)) game
+
+
+fuzzPositions : Fuzzer (List CellPosition)
+fuzzPositions =
+    Fuzz.custom (shuffle allPossiblePositions) noShrink
 
 
 suite : Test
@@ -107,5 +115,18 @@ suite =
                                 ]
                     in
                     Expect.equal (Draw (getGrid game)) game
+            , fuzz fuzzPositions "Should end with draw or win after clicking on all possible cells" <|
+                \positions ->
+                    let
+                        isNotRunning =
+                            \game ->
+                                case game of
+                                    Running _ _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                    in
+                    Expect.equal True (selectCells positions |> isNotRunning)
             ]
         ]
