@@ -3,15 +3,17 @@ module GameTest exposing (..)
 import Array
 import Expect exposing (Expectation)
 import Fuzz exposing (intRange)
-import Game exposing (Cell, CellState(..), Game(..), Player(..), createGrid, getGrid, getPlayer, isFull, selectCell, updateGrid)
+import Game exposing (Cell, CellState(..), Game(..), Player(..), createGrid, getGrid, getPlayer, selectCell, updateGrid)
 import Test exposing (Test, describe, fuzz2, test)
 
 
+
+-- Composition of function
+
+
 runGame : List ( Int, Int ) -> Game
-runGame positions =
-    positions
-        |> List.map (\( x, y ) -> { x = x, y = y })
-        |> List.foldl selectCell (Running FirstPlayer createGrid)
+runGame =
+    List.map (\( x, y ) -> { x = x, y = y }) >> List.foldl selectCell (Running FirstPlayer createGrid)
 
 
 testWinningPosition : List ( Int, Int ) -> Expectation

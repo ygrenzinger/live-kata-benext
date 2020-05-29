@@ -96,11 +96,12 @@ updateGrid player pos grid =
     updateArrayWith (updateRow player pos.x) pos.y grid
 
 
-cellStateAt : CellPosition -> Grid -> Maybe CellState
-cellStateAt pos grid =
+cellStateAt : Grid -> CellPosition -> CellState
+cellStateAt grid pos =
     Array.get pos.y grid
         |> Maybe.andThen (\row -> Array.get pos.x row)
         |> Maybe.map (\cell -> cell.state)
+        |> Maybe.withDefault Empty
 
 
 getPlayer : Game -> Player
@@ -162,11 +163,11 @@ allWinningPositions =
 
 positionIsOwnedBy : Grid -> CellPosition -> Maybe Player
 positionIsOwnedBy grid position =
-    case cellStateAt position grid of
-        Just Cross ->
+    case cellStateAt grid position of
+        Cross ->
             Just FirstPlayer
 
-        Just Circle ->
+        Circle ->
             Just SecondPlayer
 
         _ ->
@@ -229,18 +230,17 @@ playerTurn pos player grid =
 
 isFull : Grid -> Bool
 isFull grid =
-    let
-        positions =
-            List.range 0 2 |> List.concatMap (\y -> List.range 0 2 |> List.map (\x -> { x = x, y = y }))
-    in
-    positions |> List.map (\pos -> cellStateAt pos grid) |> List.all (\state -> state /= Just Empty)
+    List.range 0 2
+        |> List.concatMap (\y -> List.range 0 2 |> List.map (\x -> { x = x, y = y }))
+        |> List.map (cellStateAt grid)
+        |> List.all ((/=) Empty)
 
 
 selectCell : CellPosition -> Game -> Game
 selectCell pos game =
     case game of
         (Running player grid) as runningGame ->
-            if cellStateAt pos grid == Just Empty then
+            if cellStateAt grid pos == Empty then
                 playerTurn pos player grid
 
             else
