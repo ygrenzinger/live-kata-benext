@@ -114,10 +114,22 @@ buildPage : Model -> Html Msg
 buildPage game =
     case game of
         Running _ grid ->
-            buildGrid grid
+            div []
+                [ text "Running"
+                , buildGrid grid
+                ]
 
         Won _ grid ->
-            buildGrid grid
+            div []
+                [ text "Won"
+                , buildGrid grid
+                ]
+
+        Draw _ grid ->
+            div []
+                [ text "Draw"
+                , buildGrid grid
+                ]
 
 
 view : Model -> Html.Html Msg

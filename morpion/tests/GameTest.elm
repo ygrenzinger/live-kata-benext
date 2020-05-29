@@ -1,10 +1,26 @@
 module GameTest exposing (..)
 
 import Array
-import Expect
+import Expect exposing (Expectation)
 import Fuzz exposing (intRange)
-import Game exposing (Cell, CellState(..), Game(..), Player(..), createGrid, getGrid, getPlayer, selectCell, updateGrid)
+import Game exposing (Cell, CellState(..), Game(..), Player(..), createGrid, getGrid, getPlayer, isFull, selectCell, updateGrid)
 import Test exposing (Test, describe, fuzz2, test)
+
+
+runGame : List ( Int, Int ) -> Game
+runGame positions =
+    positions
+        |> List.map (\( x, y ) -> { x = x, y = y })
+        |> List.foldl selectCell (Running FirstPlayer createGrid)
+
+
+testWinningPosition : List ( Int, Int ) -> Expectation
+testWinningPosition positions =
+    let
+        game =
+            runGame positions
+    in
+    Expect.equal (Won FirstPlayer (getGrid game)) game
 
 
 suite : Test
@@ -69,20 +85,58 @@ suite =
                             selectCell { x = 0, y = 1 } firstPlayerTurn
                     in
                     Expect.equal firstPlayerTurn noChange
-            , test "should stop the game when first player win" <|
+            , test "should stop the game when first player win when he filled a column" <|
+                \_ ->
+                    testWinningPosition
+                        [ ( 0, 0 )
+                        , ( 1, 0 )
+                        , ( 0, 1 )
+                        , ( 1, 1 )
+                        , ( 0, 2 )
+                        ]
+            , test "should stop the game when first player win when he filled a row" <|
+                \_ ->
+                    testWinningPosition
+                        [ ( 0, 0 )
+                        , ( 0, 1 )
+                        , ( 1, 0 )
+                        , ( 1, 1 )
+                        , ( 2, 0 )
+                        ]
+            , test "should stop the game when first player win when he filled a left to right diagonal" <|
+                \_ ->
+                    testWinningPosition
+                        [ ( 0, 0 )
+                        , ( 0, 1 )
+                        , ( 1, 1 )
+                        , ( 0, 2 )
+                        , ( 2, 2 )
+                        ]
+            , test "should stop the game when first player win when he filled a right to left diagonal" <|
+                \_ ->
+                    testWinningPosition
+                        [ ( 2, 0 )
+                        , ( 0, 1 )
+                        , ( 1, 1 )
+                        , ( 1, 0 )
+                        , ( 0, 2 )
+                        ]
+            , test "should stop the game when there is a draw" <|
                 \_ ->
                     let
                         game =
-                            Running FirstPlayer createGrid
-                                |> selectCell { x = 0, y = 0 }
-                                |> selectCell { x = 1, y = 0 }
-                                |> selectCell { x = 0, y = 1 }
-                                |> selectCell { x = 1, y = 1 }
-                                |> selectCell { x = 0, y = 2 }
-
-                        grid =
-                            getGrid game
+                            runGame
+                                [ ( 0, 0 )
+                                , ( 1, 1 )
+                                , ( 1, 0 )
+                                , ( 2, 0 )
+                                , ( 0, 2 )
+                                , ( 0, 1 )
+                                , ( 2, 1 )
+                                , ( 1, 2 )
+                                , ( 2, 2 )
+                                ]
                     in
-                    Expect.equal (Won FirstPlayer grid) game
+                    Expect.equal (Draw FirstPlayer (getGrid game)) game
             ]
         ]

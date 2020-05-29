@@ -1,4 +1,4 @@
-module Game exposing (Cell, CellPosition, CellState(..), Game(..), Grid, Player(..), Row, createGrid, getGrid, getPlayer, selectCell, updateGrid)
+module Game exposing (Cell, CellPosition, CellState(..), Game(..), Grid, Player(..), Row, cellStateAt, createGrid, getGrid, getPlayer, isFull, selectCell, updateGrid)
 
 import Array exposing (Array)
 
@@ -37,6 +37,7 @@ type Player
 type Game
     = Running Player Grid
     | Won Player Grid
+    | Draw Player Grid
 
 
 createRow : Int -> Row
@@ -86,6 +87,9 @@ getGrid game =
         Won _ grid ->
             grid
 
+        Draw _ grid ->
+            grid
+
 
 updateGrid : Player -> CellPosition -> Grid -> Grid
 updateGrid player pos grid =
@@ -108,6 +112,9 @@ getPlayer game =
         Won player _ ->
             player
 
+        Draw player _ ->
+            player
+
 
 switchPlayer : Player -> Player
 switchPlayer player =
@@ -119,22 +126,20 @@ switchPlayer player =
             FirstPlayer
 
 
-
--- winsPosition
--- isPlayerWon : Player -> Grid -> Boolean
--- isPlayerWon player grid =
+buildWinningPosition : (Int -> Int -> CellPosition) -> List (List CellPosition)
+buildWinningPosition f =
+    List.range 0 2
+        |> List.map (\x -> List.range 0 2 |> List.map (f x))
 
 
 columnsWinningPosition : List (List CellPosition)
 columnsWinningPosition =
-    List.range 0 2
-        |> List.map (\x -> List.range 0 2 |> List.map (\y -> { x = x, y = y }))
+    buildWinningPosition (\x y -> { x = x, y = y })
 
 
 rowsWinningPosition : List (List CellPosition)
 rowsWinningPosition =
-    List.range 0 2
-        |> List.map (\y -> List.range 0 2 |> List.map (\x -> { x = x, y = y }))
+    buildWinningPosition (\x y -> { x = y, y = x })
 
 
 diagonalsWinningPosition : List (List CellPosition)
@@ -145,8 +150,7 @@ diagonalsWinningPosition =
                 |> List.map (\i -> { x = i, y = i })
 
         rightToLeft =
-            List.range 2 0
-                |> List.map (\i -> { x = i, y = i })
+            [ { x = 2, y = 0 }, { x = 1, y = 1 }, { x = 0, y = 2 } ]
     in
     [ leftToRight, rightToLeft ]
 
@@ -216,7 +220,20 @@ playerTurn pos player grid =
             Won player (getGrid updatedGame)
 
         Nothing ->
-            updatedGame
+            if isFull (getGrid updatedGame) then
+                Draw player (getGrid updatedGame)
+
+            else
+                updatedGame
+
+
+isFull : Grid -> Bool
+isFull grid =
+    let
+        positions =
+            List.range 0 2 |> List.concatMap (\y -> List.range 0 2 |> List.map (\x -> { x = x, y = y }))
+    in
+    positions |> List.map (\pos -> cellStateAt pos grid) |> List.all (\state -> state /= Just Empty)
 
 
 selectCell : CellPosition -> Game -> Game
