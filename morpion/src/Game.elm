@@ -1,32 +1,6 @@
-module Game exposing (Cell, CellPosition, CellState(..), Game(..), Grid, Player(..), Row, cellStateAt, createGrid, getGrid, getPlayer, isFull, selectCell, updateGrid)
+module Game exposing (Game(..), Player(..), getGrid, getPlayer, selectCell)
 
-import Array exposing (Array)
-
-
-type CellState
-    = Empty
-    | Cross
-    | Circle
-
-
-type alias Cell =
-    { position : CellPosition
-    , state : CellState
-    }
-
-
-type alias CellPosition =
-    { x : Int
-    , y : Int
-    }
-
-
-type alias Row =
-    Array Cell
-
-
-type alias Grid =
-    Array Row
+import Grid exposing (CellPosition, CellState(..), Grid, cellStateAt, isFull, positionsAreOwnedBy, updateGrid)
 
 
 type Player
@@ -39,47 +13,6 @@ type Game
     = Running Player Grid
     | Won Player Grid
     | Draw Grid
-
-
-createRow : Int -> Row
-createRow y =
-    List.range 0 2 |> List.map (\x -> Cell { x = x, y = y } Empty) |> Array.fromList
-
-
-updateCell : Player -> Cell -> Cell
-updateCell player cell =
-    { cell | state = cellStateForPlayer player }
-
-
-updateArrayWith : (a -> a) -> Int -> Array a -> Array a
-updateArrayWith f index array =
-    Array.get index array
-        |> Maybe.map f
-        |> Maybe.map (\x -> Array.set index x array)
-        |> Maybe.withDefault array
-
-
-updateRow : Player -> Int -> Row -> Row
-updateRow player x row =
-    updateArrayWith (updateCell player) x row
-
-
-cellStateForPlayer : Player -> CellState
-cellStateForPlayer player =
-    case player of
-        CrossPlayer ->
-            Cross
-
-        CirclePlayer ->
-            Circle
-
-        None ->
-            Empty
-
-
-createGrid : Grid
-createGrid =
-    List.range 0 2 |> List.map createRow |> Array.fromList
 
 
 getGrid : Game -> Grid
@@ -95,19 +28,6 @@ getGrid game =
             grid
 
 
-updateGrid : Player -> CellPosition -> Grid -> Grid
-updateGrid player pos grid =
-    updateArrayWith (updateRow player pos.x) pos.y grid
-
-
-cellStateAt : Grid -> CellPosition -> CellState
-cellStateAt grid pos =
-    Array.get pos.y grid
-        |> Maybe.andThen (\row -> Array.get pos.x row)
-        |> Maybe.map (\cell -> cell.state)
-        |> Maybe.withDefault Empty
-
-
 getPlayer : Game -> Player
 getPlayer game =
     case game of
@@ -121,6 +41,38 @@ getPlayer game =
             None
 
 
+selectCell : CellPosition -> Game -> Game
+selectCell pos game =
+    case game of
+        (Running player grid) as runningGame ->
+            if cellStateAt grid pos == Empty then
+                playerTurn pos player grid
+
+            else
+                runningGame
+
+        _ ->
+            game
+
+
+playerTurn : CellPosition -> Player -> Grid -> Game
+playerTurn pos player grid =
+    let
+        updatedGrid =
+            updateGrid (cellStateForPlayer player) pos grid
+    in
+    case hasWinner updatedGrid of
+        None ->
+            if isFull updatedGrid then
+                Draw updatedGrid
+
+            else
+                Running (switchPlayer player) updatedGrid
+
+        winner ->
+            Won winner updatedGrid
+
+
 switchPlayer : Player -> Player
 switchPlayer player =
     case player of
@@ -132,6 +84,46 @@ switchPlayer player =
 
         _ ->
             None
+
+
+hasWinner : Grid -> Player
+hasWinner grid =
+    let
+        playerForCellState state =
+            case state of
+                Just Cross ->
+                    CrossPlayer
+
+                Just Circle ->
+                    CirclePlayer
+
+                _ ->
+                    None
+    in
+    allWinningPositions
+        |> List.map (positionsAreOwnedBy grid)
+        |> List.map playerForCellState
+        |> List.filter ((/=) None)
+        |> List.head
+        |> Maybe.withDefault None
+
+
+cellStateForPlayer : Player -> CellState
+cellStateForPlayer player =
+    case player of
+        CrossPlayer ->
+            Cross
+
+        CirclePlayer ->
+            Circle
+
+        None ->
+            Empty
+
+
+allWinningPositions : List (List CellPosition)
+allWinningPositions =
+    List.concat [ columnsWinningPosition, rowsWinningPosition, diagonalsWinningPosition ]
 
 
 buildWinningPosition : (Int -> Int -> CellPosition) -> List (List CellPosition)
@@ -161,94 +153,3 @@ diagonalsWinningPosition =
             [ { x = 2, y = 0 }, { x = 1, y = 1 }, { x = 0, y = 2 } ]
     in
     [ leftToRight, rightToLeft ]
-
-
-allWinningPositions : List (List CellPosition)
-allWinningPositions =
-    List.concat [ columnsWinningPosition, rowsWinningPosition, diagonalsWinningPosition ]
-
-
-positionIsOwnedBy : Grid -> CellPosition -> Maybe Player
-positionIsOwnedBy grid position =
-    case cellStateAt grid position of
-        Cross ->
-            Just CrossPlayer
-
-        Circle ->
-            Just CirclePlayer
-
-        _ ->
-            Nothing
-
-
-positionsAreOwnedBy : Grid -> List CellPosition -> Maybe Player
-positionsAreOwnedBy grid positions =
-    let
-        listMaybePlayer : List (Maybe Player)
-        listMaybePlayer =
-            List.map (positionIsOwnedBy grid) positions
-
-        first : Maybe Player
-        first =
-            List.head listMaybePlayer |> Maybe.withDefault Nothing
-
-        result =
-            List.all ((==) first) listMaybePlayer
-    in
-    if result then
-        first
-
-    else
-        Nothing
-
-
-hasWinner : Grid -> Maybe Player
-hasWinner grid =
-    allWinningPositions
-        |> List.map (positionsAreOwnedBy grid)
-        |> List.filter ((/=) Nothing)
-        |> List.head
-        |> Maybe.withDefault Nothing
-
-
-playerTurn : CellPosition -> Player -> Grid -> Game
-playerTurn pos player grid =
-    let
-        updatedGrid =
-            updateGrid player pos grid
-
-        winner =
-            hasWinner updatedGrid
-    in
-    case winner of
-        Just _ ->
-            Won player updatedGrid
-
-        Nothing ->
-            if isFull updatedGrid then
-                Draw updatedGrid
-
-            else
-                Running (switchPlayer player) updatedGrid
-
-
-isFull : Grid -> Bool
-isFull grid =
-    List.range 0 2
-        |> List.concatMap (\y -> List.range 0 2 |> List.map (\x -> { x = x, y = y }))
-        |> List.map (cellStateAt grid)
-        |> List.all ((/=) Empty)
-
-
-selectCell : CellPosition -> Game -> Game
-selectCell pos game =
-    case game of
-        (Running player grid) as runningGame ->
-            if cellStateAt grid pos == Empty then
-                playerTurn pos player grid
-
-            else
-                runningGame
-
-        _ ->
-            game

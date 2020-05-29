@@ -3,7 +3,8 @@ module GameTest exposing (..)
 import Array
 import Expect exposing (Expectation)
 import Fuzz exposing (intRange)
-import Game exposing (Cell, CellState(..), Game(..), Player(..), createGrid, getGrid, getPlayer, selectCell, updateGrid)
+import Game exposing (..)
+import Grid exposing (..)
 import Test exposing (Test, describe, fuzz2, test)
 
 
@@ -28,42 +29,8 @@ testWinningPosition positions =
 suite : Test
 suite =
     describe "Morpion game"
-        [ describe "Grid"
-            [ fuzz2 (intRange 0 2) (intRange 0 2) "should update grid with cross because first player" <|
-                \x y ->
-                    let
-                        emptyGrid =
-                            createGrid
-
-                        player =
-                            CrossPlayer
-
-                        updatedGrid =
-                            updateGrid player { x = x, y = y } emptyGrid
-
-                        updatedCell =
-                            Array.get y updatedGrid
-                                |> Maybe.andThen (\row -> Array.get x row)
-                    in
-                    Expect.equal (Just (Cell { x = x, y = y } Cross)) updatedCell
-            , test "should with circle because second player" <|
-                \_ ->
-                    let
-                        emptyGrid =
-                            createGrid
-
-                        player =
-                            CirclePlayer
-
-                        updatedGrid =
-                            updateGrid player { x = 1, y = 0 } emptyGrid
-
-                        updatedCell =
-                            Array.get 0 updatedGrid
-                                |> Maybe.andThen (\row -> Array.get 1 row)
-                    in
-                    Expect.equal (Just (Cell { x = 1, y = 0 } Circle)) updatedCell
-            , test "should switch player" <|
+        [ describe "Game"
+            [ test "should switch player" <|
                 \_ ->
                     let
                         game =

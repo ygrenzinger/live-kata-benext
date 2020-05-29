@@ -9,7 +9,8 @@ module Main exposing (..)
 import Array
 import Browser
 import Css exposing (..)
-import Game exposing (Cell, CellPosition, CellState(..), Game(..), Grid, Player(..), Row, createGrid, selectCell)
+import Game exposing (Game(..), Player(..), selectCell)
+import Grid exposing (Cell, CellPosition, CellState(..), Grid, Row, createGrid)
 import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
