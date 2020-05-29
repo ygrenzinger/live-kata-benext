@@ -13,7 +13,7 @@ import Test exposing (Test, describe, fuzz2, test)
 
 runGame : List ( Int, Int ) -> Game
 runGame =
-    List.map (\( x, y ) -> { x = x, y = y }) >> List.foldl selectCell (Running FirstPlayer createGrid)
+    List.map (\( x, y ) -> { x = x, y = y }) >> List.foldl selectCell (Running CrossPlayer createGrid)
 
 
 testWinningPosition : List ( Int, Int ) -> Expectation
@@ -22,7 +22,7 @@ testWinningPosition positions =
         game =
             runGame positions
     in
-    Expect.equal (Won FirstPlayer (getGrid game)) game
+    Expect.equal (Won CrossPlayer (getGrid game)) game
 
 
 suite : Test
@@ -36,7 +36,7 @@ suite =
                             createGrid
 
                         player =
-                            FirstPlayer
+                            CrossPlayer
 
                         updatedGrid =
                             updateGrid player { x = x, y = y } emptyGrid
@@ -53,7 +53,7 @@ suite =
                             createGrid
 
                         player =
-                            SecondPlayer
+                            CirclePlayer
 
                         updatedGrid =
                             updateGrid player { x = 1, y = 0 } emptyGrid
@@ -67,18 +67,18 @@ suite =
                 \_ ->
                     let
                         game =
-                            Running FirstPlayer createGrid
+                            Running CrossPlayer createGrid
                                 |> selectCell { x = 0, y = 1 }
 
                         player =
                             getPlayer game
                     in
-                    Expect.equal SecondPlayer player
+                    Expect.equal CirclePlayer player
             , test "Should not update Game state if player tries to click on a non empty cell" <|
                 \_ ->
                     let
                         initGame =
-                            Running FirstPlayer createGrid
+                            Running CrossPlayer createGrid
 
                         firstPlayerTurn =
                             selectCell { x = 0, y = 1 } initGame
@@ -139,6 +139,6 @@ suite =
                                 , ( 2, 2 )
                                 ]
                     in
-                    Expect.equal (Draw FirstPlayer (getGrid game)) game
+                    Expect.equal (Draw (getGrid game)) game
             ]
         ]

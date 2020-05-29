@@ -34,7 +34,7 @@ type alias Model =
 
 init : Model
 init =
-    Running FirstPlayer createGrid
+    Running CrossPlayer createGrid
 
 
 
@@ -125,7 +125,7 @@ buildPage game =
                 , buildGrid grid
                 ]
 
-        Draw _ grid ->
+        Draw grid ->
             div []
                 [ text "Draw"
                 , buildGrid grid

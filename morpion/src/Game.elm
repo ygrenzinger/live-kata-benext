@@ -30,14 +30,15 @@ type alias Grid =
 
 
 type Player
-    = FirstPlayer
-    | SecondPlayer
+    = CrossPlayer
+    | CirclePlayer
+    | None
 
 
 type Game
     = Running Player Grid
     | Won Player Grid
-    | Draw Player Grid
+    | Draw Grid
 
 
 createRow : Int -> Row
@@ -66,11 +67,14 @@ updateRow player x row =
 cellStateForPlayer : Player -> CellState
 cellStateForPlayer player =
     case player of
-        FirstPlayer ->
+        CrossPlayer ->
             Cross
 
-        SecondPlayer ->
+        CirclePlayer ->
             Circle
+
+        None ->
+            Empty
 
 
 createGrid : Grid
@@ -87,7 +91,7 @@ getGrid game =
         Won _ grid ->
             grid
 
-        Draw _ grid ->
+        Draw grid ->
             grid
 
 
@@ -113,18 +117,21 @@ getPlayer game =
         Won player _ ->
             player
 
-        Draw player _ ->
-            player
+        Draw _ ->
+            None
 
 
 switchPlayer : Player -> Player
 switchPlayer player =
     case player of
-        FirstPlayer ->
-            SecondPlayer
+        CrossPlayer ->
+            CirclePlayer
 
-        SecondPlayer ->
-            FirstPlayer
+        CirclePlayer ->
+            CrossPlayer
+
+        _ ->
+            None
 
 
 buildWinningPosition : (Int -> Int -> CellPosition) -> List (List CellPosition)
@@ -165,10 +172,10 @@ positionIsOwnedBy : Grid -> CellPosition -> Maybe Player
 positionIsOwnedBy grid position =
     case cellStateAt grid position of
         Cross ->
-            Just FirstPlayer
+            Just CrossPlayer
 
         Circle ->
-            Just SecondPlayer
+            Just CirclePlayer
 
         _ ->
             Nothing
@@ -207,25 +214,22 @@ hasWinner grid =
 playerTurn : CellPosition -> Player -> Grid -> Game
 playerTurn pos player grid =
     let
-        nextPlayer =
-            switchPlayer player
-
-        updatedGame =
-            Running nextPlayer (updateGrid player pos grid)
+        updatedGrid =
+            updateGrid player pos grid
 
         winner =
-            hasWinner (getGrid updatedGame)
+            hasWinner updatedGrid
     in
     case winner of
         Just _ ->
-            Won player (getGrid updatedGame)
+            Won player updatedGrid
 
         Nothing ->
-            if isFull (getGrid updatedGame) then
-                Draw player (getGrid updatedGame)
+            if isFull updatedGrid then
+                Draw updatedGrid
 
             else
-                updatedGame
+                Running (switchPlayer player) updatedGrid
 
 
 isFull : Grid -> Bool
