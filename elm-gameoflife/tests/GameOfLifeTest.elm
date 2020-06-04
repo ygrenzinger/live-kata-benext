@@ -2,7 +2,7 @@ module GameOfLifeTest exposing (..)
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
-import GameOfLife exposing (CellState(..), tick)
+import GameOfLife exposing (CellState(..), computeAliveNeighbours, fromString, initGrid, tick)
 import Test exposing (..)
 
 
@@ -25,5 +25,53 @@ suite =
             , test "Any dead cell without exactly three live neighbours stays dead" <|
                 \_ ->
                     List.map (tick DEAD) [ 0, 1, 2, 4, 5, 6, 7, 8 ] |> List.all ((==) DEAD) |> Expect.true "should be all dead"
+            ]
+        , describe "Literate programming"
+            [ test "convert empty grid from literate representation" <|
+                \_ ->
+                    let
+                        grid =
+                            fromString """
+                    000
+                    000
+                    000
+                    """
+                    in
+                    Expect.equal (initGrid DEAD 3) grid
+            , test "convert full grid alive from literate representation" <|
+                \_ ->
+                    let
+                        grid =
+                            fromString """
+                        111
+                        111
+                        111
+                        """
+                    in
+                    Expect.equal (initGrid ALIVE 3) grid
+            ]
+        , describe "Compute alive neighbours"
+            [ test "Should return 0 when there is no alive neighbours" <|
+                \_ ->
+                    let
+                        grid =
+                            fromString """
+                    000
+                    000
+                    000
+                    """
+                    in
+                    Expect.equal 0 (computeAliveNeighbours grid ( 1, 1 ))
+            , test "Should return 8 when all neighbours are alive" <|
+                \_ ->
+                    let
+                        grid =
+                            fromString """
+                        111
+                        111
+                        111
+                        """
+                    in
+                    Expect.equal 8 (computeAliveNeighbours grid ( 1, 1 ))
             ]
         ]
