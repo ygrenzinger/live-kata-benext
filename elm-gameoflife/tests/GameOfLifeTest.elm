@@ -1,9 +1,21 @@
-module GameOfLifeTest exposing (..)
+module GameOfLifeTest exposing (suite)
 
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
-import GameOfLife exposing (CellState(..), computeAliveNeighbours, fromString, initGrid, tick)
-import Test exposing (..)
+import Expect
+import GameOfLife exposing (CellState(..), Grid(..), Position, countAliveNeighbours, fromString, initGrid, killCell, tick)
+import Set exposing (Set)
+import Test exposing (Test, describe, test)
+
+
+fullGrid : Int -> Grid
+fullGrid size =
+    let
+        cells : Set Position
+        cells =
+            List.range 0 (size - 1)
+                |> List.concatMap (\i -> List.range 0 (size - 1) |> List.map (\j -> ( i, j )))
+                |> Set.fromList
+    in
+    Grid size cells
 
 
 suite : Test
@@ -37,7 +49,7 @@ suite =
                     000
                     """
                     in
-                    Expect.equal (initGrid DEAD 3) grid
+                    Expect.equal (initGrid 3 Set.empty) grid
             , test "convert full grid alive from literate representation" <|
                 \_ ->
                     let
@@ -48,7 +60,18 @@ suite =
                         111
                         """
                     in
-                    Expect.equal (initGrid ALIVE 3) grid
+                    Expect.equal (fullGrid 3) grid
+            , test "convert partial grid from literate representation" <|
+                \_ ->
+                    let
+                        grid =
+                            fromString """
+                        111
+                        101
+                        101
+                        """
+                    in
+                    Expect.equal (fullGrid 3 |> killCell ( 1, 1 ) |> killCell ( 2, 1 )) grid
             ]
         , describe "Compute alive neighbours"
             [ test "Should return 0 when there is no alive neighbours" <|
@@ -61,7 +84,7 @@ suite =
                     000
                     """
                     in
-                    Expect.equal 0 (computeAliveNeighbours grid ( 1, 1 ))
+                    Expect.equal 0 (countAliveNeighbours grid ( 1, 1 ))
             , test "Should return 8 when all neighbours are alive" <|
                 \_ ->
                     let
@@ -72,6 +95,6 @@ suite =
                         111
                         """
                     in
-                    Expect.equal 8 (computeAliveNeighbours grid ( 1, 1 ))
+                    Expect.equal 8 (countAliveNeighbours grid ( 1, 1 ))
             ]
         ]
