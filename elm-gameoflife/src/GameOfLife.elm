@@ -1,10 +1,9 @@
 module GameOfLife exposing (..)
 
-import Array exposing (Array)
-import Dict exposing (size)
-import Html exposing (b)
+import Array exposing (toList)
 import Set exposing (Set)
 import String exposing (String, lines, trim)
+import Test.Html.Query exposing (count)
 
 
 type CellState
@@ -24,8 +23,8 @@ type Grid
     = Grid Int Cells
 
 
-tick : CellState -> Int -> CellState
-tick state nbOfAliveNeigbours =
+tickCell : CellState -> Int -> CellState
+tickCell state nbOfAliveNeigbours =
     case ( state, nbOfAliveNeigbours ) of
         ( _, 3 ) ->
             ALIVE
@@ -45,6 +44,37 @@ initGrid size cells =
 killCell : Position -> Grid -> Grid
 killCell pos (Grid size cells) =
     Grid size (Set.remove pos cells)
+
+
+tick : Grid -> Grid
+tick grid =
+    let
+        (Grid size cells) =
+            grid
+
+        allPossiblePositions : List Position
+        allPossiblePositions =
+            cells |> Set.toList |> List.concatMap neighbours
+
+        nextCellStateAtPosition : Position -> ( Position, CellState )
+        nextCellStateAtPosition pos =
+            let
+                cell =
+                    cellAt grid pos
+
+                nextCell =
+                    tickCell cell (countAliveNeighbours grid pos)
+            in
+            ( pos, nextCell )
+
+        updatedCells =
+            allPossiblePositions
+                |> List.map nextCellStateAtPosition
+                |> List.filter (\( pos, cell ) -> cell == ALIVE)
+                |> List.map (\( pos, _ ) -> pos)
+                |> Set.fromList
+    in
+    Grid size updatedCells
 
 
 convertChar : Char -> CellState
