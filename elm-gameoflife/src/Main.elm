@@ -1,7 +1,7 @@
 module Main exposing (Model, init, main, update, view)
 
 import Browser
-import GameOfLife exposing (Grid, emptyGrid, tick)
+import GameOfLife exposing (Grid, CellState, emptyGrid, randomGrid, tick, cellAt)
 import Html exposing (Html, button, div, span, text)
 import Html.Events exposing (onClick)
 import Time
@@ -28,7 +28,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Paused (emptyGrid gridSize), Cmd.none )
+    ( Paused (randomGrid gridSize), Cmd.none )
 
 
 type Msg
@@ -55,7 +55,7 @@ update msg model =
             tickGame model
 
         Reset ->
-            ( Paused (emptyGrid gridSize), Cmd.none )
+            ( Paused (randomGrid gridSize), Cmd.none )
 
         Start ->
             ( Running (getGrid model), Cmd.none )
@@ -72,7 +72,11 @@ subscriptions _ =
 displayCell : Grid -> Int -> Int -> Html Msg
 displayCell grid i j =
     span []
-        [ text "0"
+        [ 
+            if cellAt grid (i, j) == GameOfLife.ALIVE then
+            text "X"
+            else 
+            text "O"
         ]
 
 
