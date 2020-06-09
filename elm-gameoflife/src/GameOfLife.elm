@@ -1,6 +1,8 @@
 module GameOfLife exposing (..)
 
 import Array exposing (empty, toList)
+import Random exposing (int, pair)
+import Random.Extra exposing (sequence)
 import Set exposing (Set)
 import String exposing (String, lines, trim)
 
@@ -35,6 +37,33 @@ tickCell state nbOfAliveNeigbours =
             DEAD
 
 
+randomGrid : Int -> Random.Generator Grid
+randomGrid size =
+    let
+        intToCellState : Int -> CellState
+        intToCellState i =
+            case i of
+                1 ->
+                    ALIVE
+
+                _ ->
+                    DEAD
+
+        randomCell : Position -> Random.Generator ( CellState, Position )
+        randomCell pos =
+            int 0 1 |> Random.map intToCellState |> Random.map (\c -> ( c, pos ))
+
+        cells : Random.Generator (Set Position)
+        cells =
+            allPossiblePositions size
+                |> List.map randomCell
+                |> sequence
+                |> Random.map (\l -> l |> List.filter (\( c, pos ) -> c == ALIVE) |> List.map (\( _, pos ) -> pos))
+                |> Random.map Set.fromList
+    in
+    Random.map (initGrid size) cells
+
+
 emptyGrid : Int -> Grid
 emptyGrid size =
     initGrid size Set.empty
@@ -61,8 +90,8 @@ tick grid =
         (Grid size cells) =
             grid
 
-        allPossiblePositions : List Position
-        allPossiblePositions =
+        allNeighboursPositions : List Position
+        allNeighboursPositions =
             cells |> Set.toList |> List.concatMap neighbours
 
         nextCellStateAtPosition : Position -> ( Position, CellState )
@@ -77,7 +106,7 @@ tick grid =
             ( pos, nextCell )
 
         updatedCells =
-            allPossiblePositions
+            allNeighboursPositions
                 |> List.map nextCellStateAtPosition
                 |> List.filter (\( pos, cell ) -> cell == ALIVE)
                 |> List.map (\( pos, _ ) -> pos)
@@ -147,3 +176,14 @@ neighbours ( i, j ) =
         |> List.concatMap (\ii -> List.range -1 1 |> List.map (\jj -> ( ii, jj )))
         |> List.map (\( ii, jj ) -> ( ii + i, jj + j ))
         |> List.filter ((/=) ( i, j ))
+
+
+allPossiblePositions : Int -> List Position
+allPossiblePositions size =
+    List.range 0 (size - 1)
+        |> List.concatMap (\i -> List.range 0 (size - 1) |> List.map (\j -> ( i, j )))
+
+
+fullGrid : Int -> Grid
+fullGrid size =
+    Grid size (allPossiblePositions size |> Set.fromList)

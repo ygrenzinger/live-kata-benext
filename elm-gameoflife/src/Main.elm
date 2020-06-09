@@ -1,10 +1,11 @@
 module Main exposing (Model, init, main, update, view)
 
 import Browser
-import GameOfLife exposing (CellState, Grid, Position, cellAt, emptyGrid, initGrid, makeAliveCell, tick)
+import GameOfLife exposing (CellState, Grid, Position, cellAt, emptyGrid, initGrid, makeAliveCell, randomGrid, tick)
 import Html exposing (Attribute, Html, button, div, span, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import Random exposing (generate)
 import Set exposing (Set)
 import Time
 
@@ -20,6 +21,8 @@ type Msg
     | Start
     | Pause
     | MakeAlive ( Int, Int )
+    | GenerateRandomGrid
+    | RandomGridGenerated Grid
 
 
 gridSize : Int
@@ -39,19 +42,6 @@ main =
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( Paused (emptyGrid gridSize), Cmd.none )
-
-
-randomGrid : Int -> Grid
-randomGrid size =
-    let
-        cells : Set Position
-        cells =
-            List.range 0 (size - 1)
-                |> List.concatMap (\i -> List.range 0 (size - 1) |> List.map (\j -> ( i, j )))
-                |> List.filter (\( i, j ) -> modBy 3 (i + j) == 0)
-                |> Set.fromList
-    in
-    initGrid size cells
 
 
 tickGame : Model -> ( Model, Cmd Msg )
@@ -91,6 +81,14 @@ update msg model =
 
         MakeAlive pos ->
             makeAlive model pos
+
+        GenerateRandomGrid ->
+            ( model
+            , Random.generate RandomGridGenerated (randomGrid gridSize)
+            )
+
+        RandomGridGenerated grid ->
+            ( Paused grid, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
@@ -168,5 +166,9 @@ view model =
                 [ onClick Pause
                 ]
                 [ text "Pause" ]
+            , button
+                [ onClick GenerateRandomGrid
+                ]
+                [ text "Random" ]
             ]
         ]

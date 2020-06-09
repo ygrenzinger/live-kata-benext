@@ -2,21 +2,9 @@ module GameOfLifeTest exposing (suite)
 
 import Array exposing (length)
 import Expect
-import GameOfLife exposing (CellState(..), Grid(..), Position, countAliveNeighbours, fromString, initGrid, killCell, tick, tickCell)
+import GameOfLife exposing (CellState(..), Grid(..), countAliveNeighbours, fromString, fullGrid, initGrid, killCell, tick, tickCell)
 import Set exposing (Set)
 import Test exposing (Test, describe, test)
-
-
-fullGrid : Int -> Grid
-fullGrid size =
-    let
-        cells : Set Position
-        cells =
-            List.range 0 (size - 1)
-                |> List.concatMap (\i -> List.range 0 (size - 1) |> List.map (\j -> ( i, j )))
-                |> Set.fromList
-    in
-    Grid size cells
 
 
 suite : Test
