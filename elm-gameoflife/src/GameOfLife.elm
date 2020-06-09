@@ -35,18 +35,6 @@ tickCell state nbOfAliveNeigbours =
             DEAD
 
 
-randomGrid : Int -> Grid
-randomGrid size =
-    let
-        cells : Set Position
-        cells =
-            List.range 0 (size - 1)
-                |> List.concatMap (\i -> List.range 0 (size - 1) |> List.map (\j -> ( i, j )))
-                |> List.filter (\(i, j) -> modBy 3 (i + j) == 0)
-                |> Set.fromList
-    in
-    initGrid size cells
-
 emptyGrid : Int -> Grid
 emptyGrid size =
     initGrid size Set.empty
@@ -60,6 +48,11 @@ initGrid size cells =
 killCell : Position -> Grid -> Grid
 killCell pos (Grid size cells) =
     Grid size (Set.remove pos cells)
+
+
+makeAliveCell : Position -> Grid -> Grid
+makeAliveCell pos (Grid size cells) =
+    Grid size (Set.insert pos cells)
 
 
 tick : Grid -> Grid

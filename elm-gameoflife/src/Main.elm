@@ -1,9 +1,11 @@
 module Main exposing (Model, init, main, update, view)
 
 import Browser
-import GameOfLife exposing (Grid, CellState, emptyGrid, randomGrid, tick, cellAt)
-import Html exposing (Html, button, div, span, text)
+import GameOfLife exposing (CellState, Grid, Position, cellAt, emptyGrid, initGrid, makeAliveCell, tick)
+import Html exposing (Attribute, Html, button, div, span, text)
+import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import Set exposing (Set)
 import Time
 
 
@@ -12,9 +14,17 @@ type Model
     | Running Grid
 
 
+type Msg
+    = Tick Time.Posix
+    | Reset
+    | Start
+    | Pause
+    | MakeAlive ( Int, Int )
+
+
 gridSize : Int
 gridSize =
-    50
+    40
 
 
 main =
@@ -28,14 +38,20 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Paused (randomGrid gridSize), Cmd.none )
+    ( Paused (emptyGrid gridSize), Cmd.none )
 
 
-type Msg
-    = Tick Time.Posix
-    | Reset
-    | Start
-    | Pause
+randomGrid : Int -> Grid
+randomGrid size =
+    let
+        cells : Set Position
+        cells =
+            List.range 0 (size - 1)
+                |> List.concatMap (\i -> List.range 0 (size - 1) |> List.map (\j -> ( i, j )))
+                |> List.filter (\( i, j ) -> modBy 3 (i + j) == 0)
+                |> Set.fromList
+    in
+    initGrid size cells
 
 
 tickGame : Model -> ( Model, Cmd Msg )
@@ -48,6 +64,16 @@ tickGame model =
             ( model, Cmd.none )
 
 
+makeAlive : Model -> Position -> ( Model, Cmd Msg )
+makeAlive model pos =
+    case model of
+        Paused grid ->
+            ( Paused (makeAliveCell pos grid), Cmd.none )
+
+        Running _ ->
+            ( model, Cmd.none )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -55,7 +81,7 @@ update msg model =
             tickGame model
 
         Reset ->
-            ( Paused (randomGrid gridSize), Cmd.none )
+            ( Paused (emptyGrid gridSize), Cmd.none )
 
         Start ->
             ( Running (getGrid model), Cmd.none )
@@ -63,32 +89,47 @@ update msg model =
         Pause ->
             ( Paused (getGrid model), Cmd.none )
 
+        MakeAlive pos ->
+            makeAlive model pos
+
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Time.every 1000 Tick
+    Time.every 500 Tick
 
 
 displayCell : Grid -> Int -> Int -> Html Msg
 displayCell grid i j =
-    span []
-        [ 
-            if cellAt grid (i, j) == GameOfLife.ALIVE then
-            text "X"
-            else 
-            text "O"
+    div
+        [ style "background-color"
+            (if cellAt grid ( i, j ) == GameOfLife.ALIVE then
+                "#000"
+
+             else
+                "#fff"
+            )
+        , style "width" "20px"
+        , style "height" "100%"
+        , style "display" "inline-block"
+        , style "border" "0.01em solid black"
+        , onClick (MakeAlive ( i, j ))
         ]
+        []
 
 
 displayRow : Grid -> Int -> Html Msg
 displayRow grid i =
-    div []
+    div
+        [ style "margin" "0"
+        , style "height" "20px"
+        ]
         (List.range 1 gridSize |> List.map (displayCell grid i))
 
 
 displayGrid : Grid -> Html Msg
 displayGrid grid =
-    div []
+    div
+        []
         (List.range 1 gridSize |> List.map (displayRow grid))
 
 
@@ -105,8 +146,27 @@ getGrid game =
 view : Model -> Html Msg
 view model =
     div []
-        [ button [ onClick Reset ] [ text "Reset" ]
-        , button [ onClick Start ] [ text "Start" ]
-        , button [ onClick Pause ] [ text "Pause" ]
-        , div [] [ displayGrid (getGrid model) ]
+        [ div
+            [ style "display" "inline-block"
+            ]
+            [ displayGrid (getGrid model) ]
+        , div
+            [ style "display" "inline-block"
+            , style "vertical-align" "top"
+            , style "text-align" "center"
+            , style "width" "100px"
+            ]
+            [ button
+                [ onClick Reset
+                ]
+                [ text "Reset" ]
+            , button
+                [ onClick Start
+                ]
+                [ text "Start" ]
+            , button
+                [ onClick Pause
+                ]
+                [ text "Pause" ]
+            ]
         ]
