@@ -1,9 +1,8 @@
 module GameOfLife exposing (..)
 
-import Array exposing (toList)
+import Array exposing (empty, toList)
 import Set exposing (Set)
 import String exposing (String, lines, trim)
-import Test.Html.Query exposing (count)
 
 
 type CellState
@@ -34,6 +33,11 @@ tickCell state nbOfAliveNeigbours =
 
         _ ->
             DEAD
+
+
+emptyGrid : Int -> Grid
+emptyGrid size =
+    initGrid size Set.empty
 
 
 initGrid : Int -> Set Position -> Grid
