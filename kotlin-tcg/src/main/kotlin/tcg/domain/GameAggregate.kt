@@ -2,21 +2,15 @@ package tcg.domain
 
 import java.util.*
 
-data class GameAggregate(val id: UUID, val eventStore: EventStore, val players: Map<String, Player>, val currentPlayer: Player? = null) {
-
-    init {
-        require(players.size == 2)
-    }
-
-    fun retrievePlayer(username: String): Player = players[username]!!
+data class GameAggregate(val id: UUID, val eventStore: EventStore, val game: Game) {
 
     fun process(command: Command): GameAggregate {
         val event = when (command) {
-            is ChooseFirstPlayer -> FirstPlayerChosen(id, command.player)
+            is SetActivePlayer -> ActivePlayerSet(id, command.choosePlayer(game.players()))
             is PlayerDrawCards -> {
-                val player = retrievePlayer(command.username)
-                val (cards, deck) = command.cardDealer(player.deck)
-                CardDrawn(id, player.username, player.hand + cards,deck)
+                val player = game.retrievePlayer(command.username)
+                val (deck, cards) = command.cardDealer(player.deck)
+                CardDrawn(id, player.username, deck, player.hand + cards)
             }
         }
 
@@ -24,18 +18,10 @@ data class GameAggregate(val id: UUID, val eventStore: EventStore, val players: 
         return evolve(event)
     }
 
-    fun evolve(event: Event) : GameAggregate {
+    fun evolve(event: Event): GameAggregate {
         return when (event) {
-            is FirstPlayerChosen -> this.copy(currentPlayer = event.player)
-            is CardDrawn -> {
-                players[event.username]?.run {
-                    copy(deck = event.deck, hand = event.hand)
-                }?.let {
-                    this@GameAggregate.copy(
-                        players = (players + (it.username to it))
-                    )
-                } ?: this
-            }
+            is ActivePlayerSet -> this.copy(game = game.setActivePlayer(event.username))
+            is CardDrawn -> this.copy(game = game.playerDrawCards(event.username, event.deck, event.hand))
         }
     }
 

@@ -6,7 +6,7 @@ sealed class Command {
     abstract val aggregateIdentifier: UUID
 }
 
-data class ChooseFirstPlayer(override val aggregateIdentifier: UUID, val player: Player) : Command()
+data class SetActivePlayer(override val aggregateIdentifier: UUID, val choosePlayer: (players: Collection<Player>) -> String) : Command()
 
-data class PlayerDrawCards(override val aggregateIdentifier: UUID, val username: String, val cardDealer : (List<Card>) -> Pair<List<Card>, List<Card>>) : Command()
+data class PlayerDrawCards(override val aggregateIdentifier: UUID, val username: String, val cardDealer : (Deck) -> Pair<Deck, List<Card>>) : Command()
 

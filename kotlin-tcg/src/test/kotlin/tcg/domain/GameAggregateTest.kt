@@ -1,7 +1,7 @@
 package tcg.domain
 
-import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import tcg.domain.Player.Companion.ORIGINAL_DECK
@@ -10,56 +10,49 @@ import java.util.*
 
 class GameAggregateTest : StringSpec({
     lateinit var gameId: UUID
-    lateinit var game: GameAggregate
+    lateinit var aggregate: GameAggregate
     lateinit var eventStore: EventStore
 
     beforeTest {
         gameId = UUID.randomUUID()
         eventStore = InMemoryEventStore()
-        game = GameAggregate(gameId, eventStore, mapOf("A" to Player("A"), "B" to Player("B")))
+        val game = Game(mapOf("A" to Player("A"), "B" to Player("B")))
+        aggregate = GameAggregate(gameId, eventStore, game)
     }
 
-    "create game" {
-        game.retrievePlayer("A") shouldBe Player("A")
-        game.retrievePlayer("B") shouldBe Player("B")
-    }
-
-    "game should have exactly 2 players" {
-        shouldThrowAny {
-            GameAggregate(gameId, eventStore, mapOf("A" to Player("A"), "B" to Player("B"), "C" to Player("C")))
-        }
-    }
 
     "players receive 3 cards" {
 
-        val updated = game
-            .process(PlayerDrawCards(gameId, "A") { deck -> Pair(deck.take(3), deck.drop(3)) })
-            .process(PlayerDrawCards(gameId, "B") { deck -> Pair(deck.take(3), deck.drop(3)) })
+        val updated = aggregate
+            .process(PlayerDrawCards(gameId, "A") { deck -> deck.take(3) })
+            .process(PlayerDrawCards(gameId, "B") { deck -> deck.take(3) })
 
-        val hand = listOf(0, 0, 1).convert()
-        eventStore.retrieveEvents(game.id) shouldContainExactly listOf(
-            CardDrawn(gameId, "A", hand, ORIGINAL_DECK.drop(3)),
-            CardDrawn(gameId, "B", hand, ORIGINAL_DECK.drop(3))
+        val (deck, cards) = ORIGINAL_DECK.take(3)
+        val hand = Hand(cards)
+        eventStore.retrieveEvents(aggregate.id) shouldContainExactly listOf(
+            CardDrawn(gameId, "A", deck, hand),
+            CardDrawn(gameId, "B", deck, hand)
         )
 
-        var player = updated.retrievePlayer("A")
+        var player = updated.game.retrievePlayer("A")
 
         player.hand shouldBe hand
-        player.deck shouldBe ORIGINAL_DECK.drop(3)
+        player.deck shouldBe deck
 
-        player = updated.retrievePlayer("B")
+        player = updated.game.retrievePlayer("B")
 
         player.hand shouldBe hand
-        player.deck shouldBe ORIGINAL_DECK.drop(3)
+        player.deck shouldBe deck
     }
 
-    "choose first player" {
-        val player = game.retrievePlayer("A")
-        val updated = game.process(ChooseFirstPlayer(gameId, player))
+    "set active player" {
+        val updated = aggregate.process(SetActivePlayer(gameId) { players -> players.first().username })
+        val activePlayer = aggregate.game.players().first()
 
-        eventStore.retrieveEvents(game.id) shouldContainExactly listOf(
-            FirstPlayerChosen(gameId, player)
+        eventStore.retrieveEvents(aggregate.id) shouldContainExactly listOf(
+            ActivePlayerSet(gameId, activePlayer.username)
         )
-        updated.currentPlayer shouldBe player
+        updated.game.activePlayer shouldBe activePlayer.username
+        updated.game.players() shouldContain activePlayer.increaseMana()
     }
 })
