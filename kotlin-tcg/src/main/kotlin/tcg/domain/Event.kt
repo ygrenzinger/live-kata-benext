@@ -8,4 +8,4 @@ sealed class Event {
 
 data class FirstPlayerChosen(override val aggregateIdentifier: UUID, val player: Player) : Event()
 
-data class CardDrawn(override val aggregateIdentifier: UUID, val username: String, val cards: List<Card>, val deck: List<Card>) : Event()
+data class CardDrawn(override val aggregateIdentifier: UUID, val username: String, val hand: List<Card>, val deck: List<Card>) : Event()

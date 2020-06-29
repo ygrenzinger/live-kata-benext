@@ -8,7 +8,7 @@ class InMemoryEventStore : EventStore{
     private val data = mutableMapOf<UUID, List<Event>>()
 
     override fun storeEvent(event: Event) {
-        data.compute(event.aggregateIdentifier) { id, events ->
+        data.compute(event.aggregateIdentifier) { _, events ->
             if (events.isNullOrEmpty()) {
                 listOf(event)
             } else {
