@@ -1,0 +1,42 @@
+[
+  {
+    "name": "+5 Dexterity Vest",
+    "quality": 14,
+    "sellIn": 4
+  },
+  {
+    "name": "Aged Brie",
+    "quality": 17,
+    "sellIn": -6
+  },
+  {
+    "name": "Elixir of the Mongoose",
+    "quality": 0,
+    "sellIn": -1
+  },
+  {
+    "name": "Sulfuras, Hand of Ragnaros",
+    "quality": 80,
+    "sellIn": 0
+  },
+  {
+    "name": "Sulfuras, Hand of Ragnaros",
+    "quality": 80,
+    "sellIn": -1
+  },
+  {
+    "name": "Backstage passes to a TAFKAL80ETC concert",
+    "quality": 27,
+    "sellIn": 9
+  },
+  {
+    "name": "Backstage passes to a TAFKAL80ETC concert",
+    "quality": 43,
+    "sellIn": 4
+  },
+  {
+    "name": "Backstage passes to a TAFKAL80ETC concert",
+    "quality": 0,
+    "sellIn": -1
+  }
+]
