@@ -9,7 +9,7 @@ test/**/*.js
 test/**/*.js.map
 coverage
 .nyc_output
-.reports
+reports
 
 # stryker temp files
 .stryker-tmp

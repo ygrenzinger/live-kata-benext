@@ -7,11 +7,16 @@ require('approvals')
 describe('Gilded Rose', function () {
     it('golden master', function () {
         const items = [
-            new Item("+5 Dexterity Vest", 10, 20), //
-            new Item("Aged Brie", 0, 5), //
-            new Item("Elixir of the Mongoose", 5, 7), //
-            new Item("Sulfuras, Hand of Ragnaros", 0, 80), //
+            new Item("+5 Dexterity Vest", 10, 20),
+            new Item("+5 Dexterity Vest", 10, -1),
+            new Item("+5 Dexterity Vest", -1, 20),
+            new Item("Aged Brie", 0, 5),
+            new Item("Aged Brie", 1, 50),
+            new Item("Aged Brie", -1, 50),
+            new Item("Elixir of the Mongoose", 5, 7),
+            new Item("Sulfuras, Hand of Ragnaros", 0, 80),
             new Item("Sulfuras, Hand of Ragnaros", -1, 80),
+            new Item("Backstage passes to a TAFKAL80ETC concert", 15, 50),
             new Item("Backstage passes to a TAFKAL80ETC concert", 15, 20),
             new Item("Backstage passes to a TAFKAL80ETC concert", 10, 30),
             new Item("Backstage passes to a TAFKAL80ETC concert", 5, 30)];
