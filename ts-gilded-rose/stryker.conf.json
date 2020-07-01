@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "mutator": "typescript",
+  "packageManager": "npm",
+  "reporters": [
+    "html",
+    "clear-text",
+    "progress"
+  ],
+  "testRunner": "mocha",
+  "transpilers": [
+    "typescript"
+  ],
+  "coverageAnalysis": "all",
+  "tsconfigFile": "tsconfig.json",
+  "mutate": [
+    "app/**/*.ts"
+  ],
+  "mochaOptions": {
+    "files": "build/**/*.spec.js",
+    "timeout": 5000
+  }
+}
