@@ -1,25 +1,31 @@
 package tcg.domain
 
-data class Game(val players: Map<String, Player>, val activePlayer: String? = null) {
-    init {
-        require(players.size == 2)
+sealed class Game() {
+    fun createGame(usernames: Pair<String, String>) =
+        CreatingGame(Pair(Player(usernames.first), Player(usernames.second)))
+}
+
+object NoGame : Game() {
+}
+
+data class CreatingGame(val players: TwoPlayers) : Game() {
+    fun startGame(firstPlayer: String): RunnningGame {
+        val first = players.retrieve(firstPlayer)
+        return RunnningGame(players.updatePlayer(first.increaseMana(1)), first)
     }
+}
 
-    fun players() = players.values
-
-    fun retrievePlayer(username: String) = players[username]?: error("Unexpected Player")
-
-    private fun updatePlayer(player: Player) =
-        if (players.containsKey(player.username)) {
-            this.copy(players = players + (player.username to player))
-        } else {
-            this
-        }
-
-    fun setActivePlayer(username: String) =
-        this.updatePlayer(retrievePlayer(username).increaseMana()).copy(activePlayer = username)
+data class RunnningGame(val players: TwoPlayers, val activePlayer: Player) : Game() {
 
     fun playerDrawCards(username: String, deck: Deck, hand: Hand) =
-        this.updatePlayer(retrievePlayer(username).drawCards(deck, hand))
+        this.updatePlayer(players.retrieve(username).drawCards(deck, hand))
+
+    fun retrieveAndUpdate(username: String, updater: (Player) -> Player): RunnningGame {
+        val player = players.retrieve(username)
+        return updatePlayer(updater(player))
+    }
+
+    private fun updatePlayer(player: Player) =
+        this.copy(players = players.updatePlayer(player))
 
 }

@@ -7,7 +7,7 @@ data class Player(val username: String,
                   val hand: Hand = Hand(emptyList())
 ) {
 
-    fun increaseMana() : Player = this.copy(mana = mana + 1)
+    fun increaseMana(value: Int) : Player = this.copy(mana = mana + value)
 
     fun drawCards(deck: Deck, hand: Hand) = this.copy(deck = deck, hand = hand)
 

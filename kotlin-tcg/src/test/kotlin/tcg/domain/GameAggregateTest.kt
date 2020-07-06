@@ -1,58 +1,59 @@
 package tcg.domain
 
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.shouldBe
+import tcg.domain.EventSourcingBDD.given
 import tcg.domain.Player.Companion.ORIGINAL_DECK
-import tcg.infra.InMemoryEventStore
 import java.util.*
 
 class GameAggregateTest : StringSpec({
     lateinit var gameId: UUID
-    lateinit var aggregate: GameAggregate
-    lateinit var eventStore: EventStore
+    val players = Pair("A", "B")
 
     beforeTest {
         gameId = UUID.randomUUID()
-        eventStore = InMemoryEventStore()
-        val game = Game(mapOf("A" to Player("A"), "B" to Player("B")))
-        aggregate = GameAggregate(gameId, eventStore, game)
     }
 
-
-    "players receive 3 cards" {
-
-        val updated = aggregate
-            .process(PlayerDrawCards(gameId, "A") { deck -> deck.take(3) })
-            .process(PlayerDrawCards(gameId, "B") { deck -> deck.take(3) })
-
-        val (deck, cards) = ORIGINAL_DECK.take(3)
-        val hand = Hand(cards)
-        eventStore.retrieveEvents(aggregate.id) shouldContainExactly listOf(
-            CardDrawn(gameId, "A", deck, hand),
-            CardDrawn(gameId, "B", deck, hand)
-        )
-
-        var player = updated.game.retrievePlayer("A")
-
-        player.hand shouldBe hand
-        player.deck shouldBe deck
-
-        player = updated.game.retrievePlayer("B")
-
-        player.hand shouldBe hand
-        player.deck shouldBe deck
+    "creating game" {
+        given(gameId)
+            .`when`(CreateGame(gameId, players))
+            .then(GameCreated(gameId, players))
     }
 
-    "set active player" {
-        val updated = aggregate.process(SetActivePlayer(gameId) { players -> players.first().username })
-        val activePlayer = aggregate.game.players().first()
-
-        eventStore.retrieveEvents(aggregate.id) shouldContainExactly listOf(
-            ActivePlayerSet(gameId, activePlayer.username)
-        )
-        updated.game.activePlayer shouldBe activePlayer.username
-        updated.game.players() shouldContain activePlayer.increaseMana()
+    "starting game" {
+        given(gameId, GameCreated(gameId, players))
+            .`when`(StartGame(gameId, { players -> players.first }, { deck, n -> deck.take(n) }))
+            .then(
+                GameStarted(gameId, players.first),
+                ManaIncreased(gameId, players.first, 1),
+                buildCardDrawnEvent(gameId, players.first, ORIGINAL_DECK, 3),
+                buildCardDrawnEvent(gameId, players.second, ORIGINAL_DECK, 4)
+            )
     }
+
 })
+
+object EventSourcingBDD {
+    lateinit var gameAggregate: GameAggregate
+    lateinit var events: List<Event>
+
+    fun given(gameId: UUID, vararg  events: Event): EventSourcingBDD {
+        gameAggregate = GameAggregate.create(gameId, events.toList())
+        return this
+    }
+
+    fun `when`(command: Command): EventSourcingBDD {
+        events = gameAggregate.handle(command)
+        return this
+    }
+
+    fun then(vararg expectedEvents: Event) {
+        events shouldContainExactly expectedEvents.toList()
+    }
+}
+
+private fun buildCardDrawnEvent(gameId: UUID, username: String, deck: Deck, nbCardsToDraw: Int): CardDrawn {
+    val (updated, cards) = deck.take(nbCardsToDraw)
+    val hand = Hand(cards)
+    return CardDrawn(gameId, username, updated, hand)
+}
