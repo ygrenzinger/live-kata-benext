@@ -8,6 +8,7 @@ data class GameAggregate(val gameId: UUID, val game: Game = NoGame) {
         return when (command) {
             is CreateGame -> createGame(command)
             is StartGame -> startGame(command)
+            is StartTurn -> startTurn(command)
         }
     }
 
@@ -29,6 +30,13 @@ data class GameAggregate(val gameId: UUID, val game: Game = NoGame) {
     private fun createGame(command: CreateGame): List<Event> {
         return when (game) {
             NoGame -> listOf(GameCreated(gameId, command.usernames))
+            else -> emptyList()
+        }
+    }
+
+    private fun startTurn(command: StartTurn) : List<Event> {
+        return when (game) {
+            is RunnningGame -> listOf(drawCard(game.players.retrieve(game.activePlayer), { deck, _-> command.cardDealer(deck)}, 1))
             else -> emptyList()
         }
     }

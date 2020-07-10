@@ -31,6 +31,20 @@ class GameAggregateTest : StringSpec({
             )
     }
 
+    "starting turn" {
+
+        given(gameId,
+            GameCreated(gameId, players),
+            GameStarted(gameId, players.first),
+            ManaIncreased(gameId, players.first, 1),
+            buildCardDrawnEvent(gameId, players.first, ORIGINAL_DECK, 3),
+            buildCardDrawnEvent(gameId, players.second, ORIGINAL_DECK, 4)
+        ).`when`(StartTurn(gameId) { deck -> deck.take(1) })
+            .then {
+                listOf(CardDrawn(gameId, players.first, Deck(ORIGINAL_DECK().drop(4)), Hand(ORIGINAL_DECK().take(4))))
+            }
+    }
+
 })
 
 object EventSourcingBDD {
@@ -49,6 +63,10 @@ object EventSourcingBDD {
 
     fun then(vararg expectedEvents: Event) {
         events shouldContainExactly expectedEvents.toList()
+    }
+
+    fun then(f: () -> List<Event>) {
+        events shouldContainExactly f()
     }
 }
 
