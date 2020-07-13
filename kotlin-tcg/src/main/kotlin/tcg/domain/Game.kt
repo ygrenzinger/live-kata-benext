@@ -4,7 +4,7 @@ sealed class Game()
 
 object NoGame : Game() {
     fun createGame(usernames: Pair<String, String>) =
-        CreatingGame(Pair(Player(usernames.first), Player(usernames.second)))
+        CreatingGame(TwoPlayers(Player(usernames.first), Player(usernames.second)))
 }
 
 data class CreatingGame(val players: TwoPlayers) : Game() {

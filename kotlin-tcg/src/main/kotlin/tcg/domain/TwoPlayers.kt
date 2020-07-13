@@ -1,41 +1,40 @@
 package tcg.domain
 
-typealias TwoPlayers = Pair<Player, Player>
+data class TwoPlayers(val first: Player, val second: Player) {
 
-fun TwoPlayers.retrieve(username: String) = when {
-    first.username == username -> {
-        first
+    fun retrieve(username: String) = when {
+        first.username == username -> {
+            first
+        }
+        second.username == username -> {
+            second
+        }
+        else -> {
+            error("Unexpected Player")
+        }
     }
-    second.username == username -> {
-        second
+
+    fun retrieveOther(username: String) = when {
+        first.username == username -> {
+            second
+        }
+        second.username == username -> {
+            first
+        }
+        else -> {
+            error("Unexpected Player")
+        }
     }
-    else -> {
-        error("Unexpected Player")
+
+    fun updatePlayer(player: Player) = when {
+        first.username == player.username -> {
+            TwoPlayers(player, second)
+        }
+        second.username == player.username -> {
+            TwoPlayers(first, player)
+        }
+        else -> {
+            this
+        }
     }
 }
-
-fun TwoPlayers.retrieveOther(username: String) = when {
-    first.username == username -> {
-        second
-    }
-    second.username == username -> {
-        first
-    }
-    else -> {
-        error("Unexpected Player")
-    }
-}
-
-fun TwoPlayers.updatePlayer(player: Player) = when {
-    first.username == player.username -> {
-        Pair(player, second)
-    }
-    second.username == player.username -> {
-        Pair(first, player)
-    }
-    else -> {
-        this
-    }
-}
-
-fun TwoPlayers.players() = setOf(first, second)

@@ -13,7 +13,7 @@ data class CreateGame(
 
 data class StartGame(
     override val aggregateIdentifier: UUID,
-    val chooseFirstPlayer: (players: Pair<Player, Player>) -> Player,
+    val chooseFirstPlayer: (players: TwoPlayers) -> Player,
     val cardDealer: (Deck, Int) -> Pair<Deck, List<Card>>
 ) : Command()
 
