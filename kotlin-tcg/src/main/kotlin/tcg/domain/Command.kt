@@ -21,3 +21,8 @@ data class StartTurn(
     override val aggregateIdentifier: UUID,
     val cardDealer: (Deck) -> Pair<Deck, List<Card>>
 ) : Command()
+
+data class DealDamageWithCard(
+    override val aggregateIdentifier: UUID,
+    val card: Card
+) : Command()

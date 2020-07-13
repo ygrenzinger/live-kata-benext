@@ -2,7 +2,9 @@
 
 package tcg.domain
 
-data class Card(val value: Int)
+data class Card(private val value: Int) {
+    operator fun invoke() = value
+}
 
 inline class Deck(private val cards: List<Card>) {
     operator fun invoke() = cards
@@ -12,6 +14,8 @@ inline class Deck(private val cards: List<Card>) {
 
 inline class Hand(private val cards: List<Card>) {
     operator fun plus(cards: List<Card>) = Hand(this.cards + cards)
+    operator fun minus(card: Card) = Hand(this.cards - card)
+    operator fun contains(card: Card) = card in this.cards
 }
 
 fun List<Int>.convert() = this.map(::Card)

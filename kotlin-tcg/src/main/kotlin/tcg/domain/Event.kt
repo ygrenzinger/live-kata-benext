@@ -13,18 +13,22 @@ data class GameCreated(
 
 data class GameStarted(
     override val aggregateIdentifier: UUID,
-    val firstPlayer: String
+    val firstPlayer: String,
+    val firstPlayerDeck: Deck,
+    val firstPlayerHand: Hand,
+    val secondPlayerDeck: Deck,
+    val secondPlayerHand: Hand
 ) : Event()
 
-data class ManaIncreased(
+data class TurnStarted(
     override val aggregateIdentifier: UUID,
-    val username: String,
-    val value: Int
+    val playerDeck: Deck,
+    val playerHand: Hand
 ) : Event()
 
-data class CardDrawn(
+data class DamageDealtWithCard(
     override val aggregateIdentifier: UUID,
-    val username: String,
-    val deck: Deck,
-    val hand: Hand
+    val cardUsed: Card,
+    val playerAttacking: String,
+    val playerAttacked: String
 ) : Event()

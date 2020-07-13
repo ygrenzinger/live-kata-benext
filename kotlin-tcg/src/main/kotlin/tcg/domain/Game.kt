@@ -1,30 +1,44 @@
 package tcg.domain
 
-sealed class Game() {
+sealed class Game()
+
+object NoGame : Game() {
     fun createGame(usernames: Pair<String, String>) =
         CreatingGame(Pair(Player(usernames.first), Player(usernames.second)))
 }
 
-object NoGame : Game()
-
 data class CreatingGame(val players: TwoPlayers) : Game() {
-    fun startGame(firstPlayer: String): RunnningGame {
-        val first = players.retrieve(firstPlayer)
-        return RunnningGame(players.updatePlayer(first.increaseMana(1)), firstPlayer)
+    fun startGame(event: GameStarted): RunnningGame {
+        val first = players.retrieve(event.firstPlayer)
+            .drawCards(event.firstPlayerDeck, event.firstPlayerHand)
+        val second = players.retrieveOther(event.firstPlayer)
+            .drawCards(event.secondPlayerDeck, event.secondPlayerHand)
+        return RunnningGame(TwoPlayers(first, second), first.username)
     }
 }
 
-data class RunnningGame(val players: TwoPlayers, val activePlayer: String) : Game() {
+data class RunnningGame(val players: TwoPlayers, private val activePlayer: String) : Game() {
+    fun active() =
+        players.retrieve(activePlayer)
+    fun opponent() =
+        players.retrieveOther(activePlayer)
 
-    fun playerDrawCards(username: String, deck: Deck, hand: Hand) =
-        this.updatePlayer(players.retrieve(username).drawCards(deck, hand))
-
-    fun retrieveAndUpdate(username: String, updater: (Player) -> Player): RunnningGame {
-        val player = players.retrieve(username)
-        return updatePlayer(updater(player))
+    fun startTurn(playerDeck: Deck, playerHand: Hand): RunnningGame {
+        val player = players.retrieve(activePlayer)
+            .drawCards(playerDeck, playerHand)
+            .increaseMana(1)
+        return this.copy(players = players.updatePlayer(player))
     }
 
-    private fun updatePlayer(player: Player) =
-        this.copy(players = players.updatePlayer(player))
+    fun dealindDamageWithCard(card: Card, playerAttacking: String, playerAttacked: String): RunnningGame {
+        val attacked = players.retrieve(playerAttacked).loosingHealth(card())
+        val attacking = players.retrieve(playerAttacking)
+            .loosingMana(card())
+            .usingCard(card)
+        val updatePlayers = players
+            .updatePlayer(attacked)
+            .updatePlayer(attacking)
+        return this.copy(players = updatePlayers)
+    }
 
 }
