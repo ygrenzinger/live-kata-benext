@@ -17,7 +17,7 @@ data class StartGame(
     val cardDealer: (Deck, Int) -> Pair<Deck, List<Card>>
 ) : Command()
 
-data class StartTurn(
+data class FirstTurn(
     override val aggregateIdentifier: UUID,
     val cardDealer: (Deck) -> Pair<Deck, List<Card>>
 ) : Command()
@@ -25,4 +25,9 @@ data class StartTurn(
 data class DealDamageWithCard(
     override val aggregateIdentifier: UUID,
     val card: Card
+) : Command()
+
+data class SwitchPlayer(
+    override val aggregateIdentifier: UUID,
+    val cardDealer: (Deck) -> Pair<Deck, List<Card>>
 ) : Command()

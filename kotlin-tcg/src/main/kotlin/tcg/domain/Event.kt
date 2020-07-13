@@ -32,3 +32,5 @@ data class DamageDealtWithCard(
     val playerAttacking: String,
     val playerAttacked: String
 ) : Event()
+
+data class PlayerSwitched(override val aggregateIdentifier: UUID) : Event()

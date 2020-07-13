@@ -41,4 +41,6 @@ data class RunnningGame(val players: TwoPlayers, private val activePlayer: Strin
         return this.copy(players = updatePlayers)
     }
 
+    fun switchPlayer() = this.copy(activePlayer = opponent().username)
+
 }

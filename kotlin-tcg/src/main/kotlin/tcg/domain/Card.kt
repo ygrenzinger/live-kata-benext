@@ -4,6 +4,7 @@ package tcg.domain
 
 data class Card(private val value: Int) {
     operator fun invoke() = value
+    override fun toString() = value.toString()
 }
 
 inline class Deck(private val cards: List<Card>) {

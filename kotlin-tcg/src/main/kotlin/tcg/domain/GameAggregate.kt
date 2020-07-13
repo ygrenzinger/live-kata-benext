@@ -9,8 +9,25 @@ data class GameAggregate(val gameId: UUID, val game: Game = NoGame) {
         return when (command) {
             is CreateGame -> createGame(command)
             is StartGame -> startGame(command)
-            is StartTurn -> startTurn(command)
+            is FirstTurn -> startTurn(command)
             is DealDamageWithCard -> dealDamage(command)
+            is SwitchPlayer -> switchPlayer(command)
+        }
+    }
+
+    private fun switchPlayer(command: SwitchPlayer): Either<String, List<Event>> {
+        return when (game) {
+            is RunnningGame -> {
+                val player = game.opponent()
+                val (deck, cards) = command.cardDealer(player.deck)
+                return Either.right(
+                    listOf(
+                        PlayerSwitched(command.aggregateIdentifier),
+                        TurnStarted(command.aggregateIdentifier, deck, player.hand.plus(cards))
+                    )
+                )
+            }
+            else -> Either.left("wrong game state")
         }
     }
 
@@ -69,7 +86,7 @@ data class GameAggregate(val gameId: UUID, val game: Game = NoGame) {
         }
     }
 
-    private fun startTurn(command: StartTurn): Either<String, List<Event>> {
+    private fun startTurn(command: FirstTurn): Either<String, List<Event>> {
         return when (game) {
             is RunnningGame -> {
                 val player = game.active()
@@ -101,6 +118,7 @@ data class GameAggregate(val gameId: UUID, val game: Game = NoGame) {
                         event.playerAttacked
                     )
                 )
+                is PlayerSwitched -> this.copy(game = game.switchPlayer())
             }
         }
     }
