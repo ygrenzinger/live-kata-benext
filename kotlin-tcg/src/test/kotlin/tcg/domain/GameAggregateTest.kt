@@ -55,7 +55,7 @@ class GameAggregateTest : StringSpec({
             gameId,
             GameCreated(gameId, players),
             buildGameStarted(gameId)
-        ).`when`(StartTurn(gameId) { deck -> deck.take(1) })
+        ).`when`(FirstTurn(gameId) { deck -> deck.take(1) })
             .then(TurnStarted(gameId, Deck(ORIGINAL_DECK().drop(4)), Hand(ORIGINAL_DECK().take(4))))
     }
 
@@ -82,6 +82,15 @@ class GameAggregateTest : StringSpec({
                     + DamageDealtWithCard(gameId, Card(0), "A", "B")
         ).`when`(DealDamageWithCard(gameId, Card(0)))
             .expectError("card 0 is not in hand")
+    }
+
+    "Switch player" {
+        given(gameId, firstTurnStarted(gameId))
+            .`when`(SwitchPlayer(gameId) { deck -> deck.take(1) })
+            .then(
+                PlayerSwitched(gameId),
+                TurnStarted(gameId, Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5)))
+            )
     }
 
 })
