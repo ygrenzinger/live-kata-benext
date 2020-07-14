@@ -22,6 +22,7 @@ data class GameStarted(
 
 data class TurnStarted(
     override val aggregateIdentifier: UUID,
+    val player: String,
     val playerDeck: Deck,
     val playerHand: Hand
 ) : Event()
@@ -33,6 +34,8 @@ data class DamageDealtWithCard(
     val playerAttacked: String
 ) : Event()
 
-data class PlayerSwitched(override val aggregateIdentifier: UUID) : Event()
+data class PlayerKilled(
+    override val aggregateIdentifier: UUID,
+    val playerKilled: String
+) : Event()
 
-//data class PlayerKilled(override val aggregateIdentifier: UUID, val playerKilled: String) : Event()

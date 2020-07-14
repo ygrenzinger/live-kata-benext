@@ -28,7 +28,7 @@ class GameAggregateTest : StringSpec({
         return listOf(
             GameCreated(gameId, players),
             buildGameStarted(gameId),
-            TurnStarted(gameId, Deck(ORIGINAL_DECK().drop(4)), Hand(ORIGINAL_DECK().take(4)))
+            TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(4)), Hand(ORIGINAL_DECK().take(4)))
         )
     }
 
@@ -55,7 +55,7 @@ class GameAggregateTest : StringSpec({
             GameCreated(gameId, players),
             buildGameStarted(gameId)
         ).`when`(FirstTurn(gameId))
-            .then(TurnStarted(gameId, Deck(ORIGINAL_DECK().drop(4)), Hand(ORIGINAL_DECK().take(4))))
+            .then(TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(4)), Hand(ORIGINAL_DECK().take(4))))
     }
 
     "Playing card with enough mana" {
@@ -87,19 +87,26 @@ class GameAggregateTest : StringSpec({
         given(gameId, firstTurnStarted(gameId))
             .`when`(SwitchPlayer(gameId))
             .then(
-                PlayerSwitched(gameId),
-                TurnStarted(gameId, Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5)))
+                TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5)))
             )
     }
 
-//    "Player killed" {
-//        given(gameId, firstTurnStarted(gameId)
-//                + (1..10).flatMap {
-//
-//        }).`when`(SwitchPlayer(gameId) { deck -> deck.take(1) })
-//            .then(
-//                PlayerKilled(gameId, players.second)
-//            )
-//    }
+    "Player killed" {
+        val almostKilledEvents: List<Event> = firstTurnStarted(gameId) +
+                (1..7).flatMap {
+                    listOf(
+                        DamageDealtWithCard(gameId, Card(it), "A", "B"),
+                        TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5 + it)), Hand(ORIGINAL_DECK().take(5 + it))),
+                        TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(4 + it)), Hand(ORIGINAL_DECK().take(4 + it)))
+                    )
+
+                }
+        given(gameId, almostKilledEvents)
+            .`when`(DealDamageWithCard(gameId, Card(3)))
+            .then(
+                DamageDealtWithCard(gameId, Card(3), "A", "B"),
+                PlayerKilled(gameId, players.second)
+            )
+    }
 
 })

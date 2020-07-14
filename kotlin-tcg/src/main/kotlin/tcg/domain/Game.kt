@@ -17,20 +17,22 @@ data class CreatingGame(val players: TwoPlayers) : Game() {
     }
 }
 
-data class RunnningGame(val players: TwoPlayers, private val activePlayer: String) : Game() {
+data class RunnningGame(val players: TwoPlayers, val activePlayer: String) : Game() {
     fun active() =
         players.retrieve(activePlayer)
+
     fun opponent() =
         players.retrieveOther(activePlayer)
 
-    fun startTurn(playerDeck: Deck, playerHand: Hand): RunnningGame {
+    fun startTurn(activePlayer: String, playerDeck: Deck, playerHand: Hand): RunnningGame {
         val player = players.retrieve(activePlayer)
             .drawCards(playerDeck, playerHand)
             .increaseMana(1)
-        return this.copy(players = players.updatePlayer(player))
+            .refillMana()
+        return this.copy(players = players.updatePlayer(player), activePlayer = activePlayer)
     }
 
-    fun dealindDamageWithCard(card: Card, playerAttacking: String, playerAttacked: String): RunnningGame {
+    fun dealingDamageWithCard(card: Card, playerAttacking: String, playerAttacked: String): RunnningGame {
         val attacked = players.retrieve(playerAttacked).loosingHealth(card())
         val attacking = players.retrieve(playerAttacking)
             .loosingMana(card())
@@ -41,6 +43,6 @@ data class RunnningGame(val players: TwoPlayers, private val activePlayer: Strin
         return this.copy(players = updatePlayers)
     }
 
-    fun switchPlayer() = this.copy(activePlayer = opponent().username)
-
 }
+
+data class EndGame(val players: TwoPlayers, val killed: String) : Game()
