@@ -9,14 +9,19 @@ object EventSourcingBDD {
     lateinit var result: Either<String, List<Event>>
 
     fun given(gameId: UUID, vararg events: Event): EventSourcingBDD {
-        gameAggregate = GameAggregate.create(gameId, events.toList())
+        gameAggregate = createAggregate(gameId, events.toList())
         return this
     }
 
     fun given(gameId: UUID, events: List<Event>): EventSourcingBDD {
-        gameAggregate = GameAggregate.create(gameId, events)
+        gameAggregate = createAggregate(gameId, events)
         return this
     }
+
+    private fun createAggregate(
+        gameId: UUID,
+        events: List<Event>
+    ) = GameAggregate.create(gameId, { players -> players.first }, { deck, n -> deck.take(n) }, events)
 
     fun `when`(command: Command): EventSourcingBDD {
         result = gameAggregate.handle(command)

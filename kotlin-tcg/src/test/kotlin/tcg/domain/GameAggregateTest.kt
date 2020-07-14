@@ -5,7 +5,6 @@ import tcg.domain.EventSourcingBDD.given
 import tcg.domain.Player.Companion.ORIGINAL_DECK
 import java.util.*
 
-
 class GameAggregateTest : StringSpec({
     lateinit var gameId: UUID
     val players = Pair("A", "B")
@@ -46,7 +45,7 @@ class GameAggregateTest : StringSpec({
 
     "starting game" {
         given(gameId, GameCreated(gameId, players))
-            .`when`(StartGame(gameId, { players -> players.first }, { deck, n -> deck.take(n) }))
+            .`when`(StartGame(gameId))
             .then(buildGameStarted(gameId))
     }
 
@@ -55,7 +54,7 @@ class GameAggregateTest : StringSpec({
             gameId,
             GameCreated(gameId, players),
             buildGameStarted(gameId)
-        ).`when`(FirstTurn(gameId) { deck -> deck.take(1) })
+        ).`when`(FirstTurn(gameId))
             .then(TurnStarted(gameId, Deck(ORIGINAL_DECK().drop(4)), Hand(ORIGINAL_DECK().take(4))))
     }
 
@@ -86,11 +85,21 @@ class GameAggregateTest : StringSpec({
 
     "Switch player" {
         given(gameId, firstTurnStarted(gameId))
-            .`when`(SwitchPlayer(gameId) { deck -> deck.take(1) })
+            .`when`(SwitchPlayer(gameId))
             .then(
                 PlayerSwitched(gameId),
                 TurnStarted(gameId, Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5)))
             )
     }
+
+//    "Player killed" {
+//        given(gameId, firstTurnStarted(gameId)
+//                + (1..10).flatMap {
+//
+//        }).`when`(SwitchPlayer(gameId) { deck -> deck.take(1) })
+//            .then(
+//                PlayerKilled(gameId, players.second)
+//            )
+//    }
 
 })

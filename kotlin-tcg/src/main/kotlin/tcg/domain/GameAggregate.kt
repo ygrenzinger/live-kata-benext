@@ -3,47 +3,34 @@ package tcg.domain
 import arrow.core.Either
 import java.util.*
 
-data class GameAggregate(val gameId: UUID, val game: Game = NoGame) {
+data class GameAggregate(val gameId: UUID,
+                         val chooseFirstPlayer: (players: TwoPlayers) -> Player,
+                         val cardDealer: (Deck, Int) -> Pair<Deck, List<Card>>,
+                         val game: Game = NoGame) {
 
     fun handle(command: Command): Either<String, List<Event>> {
         return when (command) {
-            is CreateGame -> createGame(command)
-            is StartGame -> startGame(command)
-            is FirstTurn -> startTurn(command)
-            is DealDamageWithCard -> dealDamage(command)
-            is SwitchPlayer -> switchPlayer(command)
+            is CreateGame -> createGame(command.usernames)
+            is StartGame -> startGame()
+            is FirstTurn -> startTurn()
+            is DealDamageWithCard -> dealDamage(command.card)
+            is SwitchPlayer -> switchPlayer()
         }
     }
 
-    private fun switchPlayer(command: SwitchPlayer): Either<String, List<Event>> {
+    private fun dealDamage(card: Card): Either<String, List<Event>> {
         return when (game) {
             is RunnningGame -> {
-                val player = game.opponent()
-                val (deck, cards) = command.cardDealer(player.deck)
-                return Either.right(
-                    listOf(
-                        PlayerSwitched(command.aggregateIdentifier),
-                        TurnStarted(command.aggregateIdentifier, deck, player.hand.plus(cards))
-                    )
-                )
-            }
-            else -> Either.left("wrong game state")
-        }
-    }
-
-    private fun dealDamage(command: DealDamageWithCard): Either<String, List<Event>> {
-        return when (game) {
-            is RunnningGame -> {
-                return if (game.active().filledManaSlot < command.card()) {
-                    Either.left("not enough mana to play card ${command.card()}")
-                } else if (command.card !in game.active().hand) {
-                    Either.left("card ${command.card()} is not in hand")
+                return if (game.active().filledManaSlot < card()) {
+                    Either.left("not enough mana to play card ${card()}")
+                } else if (card !in game.active().hand) {
+                    Either.left("card ${card()} is not in hand")
                 } else {
                     Either.right(
                         listOf(
                             DamageDealtWithCard(
-                                command.aggregateIdentifier,
-                                command.card,
+                                gameId,
+                                card,
                                 game.active().username,
                                 game.opponent().username
                             )
@@ -55,13 +42,40 @@ data class GameAggregate(val gameId: UUID, val game: Game = NoGame) {
         }
     }
 
-    private fun startGame(command: StartGame): Either<String, List<Event>> {
+    private fun startTurn(): Either<String, List<Event>> {
+        return when (game) {
+            is RunnningGame -> {
+                val player = game.active()
+                val (deck, cards) = cardDealer(player.deck, 1)
+                Either.right(listOf(TurnStarted(gameId, deck, player.hand.plus(cards))))
+            }
+            else -> Either.left("wrong game state")
+        }
+    }
+
+    private fun switchPlayer(): Either<String, List<Event>> {
+        return when (game) {
+            is RunnningGame -> {
+                val player = game.opponent()
+                val (deck, cards) = cardDealer(player.deck, 1)
+                return Either.right(
+                    listOf(
+                        PlayerSwitched(gameId),
+                        TurnStarted(gameId, deck, player.hand.plus(cards))
+                    )
+                )
+            }
+            else -> Either.left("wrong game state")
+        }
+    }
+
+    private fun startGame(): Either<String, List<Event>> {
         return when (game) {
             is CreatingGame -> {
-                val firstPlayer = command.chooseFirstPlayer(game.players)
-                val (firstPlayerDeck, firstPlayerCards) = command.cardDealer(firstPlayer.deck, 3)
+                val firstPlayer = chooseFirstPlayer(game.players)
+                val (firstPlayerDeck, firstPlayerCards) = cardDealer(firstPlayer.deck, 3)
                 val secondPlayer = game.players.retrieveOther(firstPlayer.username)
-                val (secondPlayerDeck, secondPlayerCards) = command.cardDealer(secondPlayer.deck, 4)
+                val (secondPlayerDeck, secondPlayerCards) = cardDealer(secondPlayer.deck, 4)
                 Either.right(
                     listOf(
                         GameStarted(
@@ -79,20 +93,9 @@ data class GameAggregate(val gameId: UUID, val game: Game = NoGame) {
         }
     }
 
-    private fun createGame(command: CreateGame): Either<String, List<Event>> {
+    private fun createGame(pair: Pair<String, String>): Either<String, List<Event>> {
         return when (game) {
-            NoGame -> Either.right(listOf(GameCreated(gameId, command.usernames)))
-            else -> Either.left("wrong game state")
-        }
-    }
-
-    private fun startTurn(command: FirstTurn): Either<String, List<Event>> {
-        return when (game) {
-            is RunnningGame -> {
-                val player = game.active()
-                val (deck, cards) = command.cardDealer(player.deck)
-                Either.right(listOf(TurnStarted(command.aggregateIdentifier, deck, player.hand.plus(cards))))
-            }
+            NoGame -> Either.right(listOf(GameCreated(gameId, pair)))
             else -> Either.left("wrong game state")
         }
     }
@@ -124,8 +127,11 @@ data class GameAggregate(val gameId: UUID, val game: Game = NoGame) {
     }
 
     companion object {
-        fun create(gameId: UUID, events: List<Event>) =
-            events.fold(GameAggregate(gameId)) { game, event -> game.evolve(event) }
+        fun create(gameId: UUID,
+                   chooseFirstPlayer: (players: TwoPlayers) -> Player,
+                   cardDealer: (Deck, Int) -> Pair<Deck, List<Card>>,
+                   events: List<Event>) =
+            events.fold(GameAggregate(gameId, chooseFirstPlayer, cardDealer)) { game, event -> game.evolve(event) }
     }
 
 }
