@@ -39,3 +39,13 @@ data class PlayerKilled(
     val playerKilled: String
 ) : Event()
 
+data class PlayerBleed(
+    override val aggregateIdentifier: UUID,
+    val player: String
+) : Event()
+
+data class PlayerBleedToDeath(
+    override val aggregateIdentifier: UUID,
+    val playerKilled: String
+) : Event()
+

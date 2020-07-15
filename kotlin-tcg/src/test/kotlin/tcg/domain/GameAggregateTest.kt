@@ -83,7 +83,7 @@ class GameAggregateTest : StringSpec({
             .expectError("card 0 is not in hand")
     }
 
-    "Switch player" {
+    "Switching player" {
         given(gameId, firstTurnStarted(gameId))
             .`when`(SwitchPlayer(gameId))
             .then(
@@ -91,7 +91,7 @@ class GameAggregateTest : StringSpec({
             )
     }
 
-    "Player killed" {
+    "Killing opponent" {
         val almostKilledEvents: List<Event> = firstTurnStarted(gameId) +
                 (1..7).flatMap {
                     listOf(
@@ -107,6 +107,33 @@ class GameAggregateTest : StringSpec({
                 DamageDealtWithCard(gameId, Card(3), "A", "B"),
                 PlayerKilled(gameId, players.second)
             )
+    }
+
+    "Bleeding" {
+        val bleedingEvents: List<Event> = firstTurnStarted(gameId) +
+                (1..30).flatMap {
+                    listOf(
+                        TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5 + it)), Hand(ORIGINAL_DECK().take(5 + it))),
+                        TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(4 + it)), Hand(ORIGINAL_DECK().take(4 + it)))
+                    )
+
+                }
+        given(gameId, bleedingEvents)
+            .`when`(SwitchPlayer(gameId))
+            .then(
+                PlayerBleed(gameId, players.second),
+                TurnStarted(gameId, "B", Deck(emptyList()), Hand(ORIGINAL_DECK()))
+            )
+    }
+
+    "Bleeding and dying" {
+        val bleedingEvents: List<Event> = firstTurnStarted(gameId) +
+                (1..30).flatMap {
+                    listOf(PlayerBleed(gameId, "B"))
+                }
+        given(gameId, bleedingEvents)
+            .`when`(SwitchPlayer(gameId))
+            .then(PlayerBleedToDeath(gameId, players.second))
     }
 
 })

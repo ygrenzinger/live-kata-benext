@@ -10,6 +10,7 @@ data class Card(private val value: Int) {
 inline class Deck(private val cards: List<Card>) {
     operator fun invoke() = cards
     operator fun minus(cards: List<Card>) = Deck(this.cards - cards)
+    fun isEmpty() = cards.isEmpty()
     fun take(n: Int) = Pair(Deck(cards.drop(n)), cards.take(n))
 }
 

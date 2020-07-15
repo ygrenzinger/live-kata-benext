@@ -43,6 +43,11 @@ data class RunnningGame(val players: TwoPlayers, val activePlayer: String) : Gam
         return this.copy(players = updatePlayers)
     }
 
+    fun playerBleed(bleedingPlayer: String): RunnningGame {
+        val player =  players.retrieve(bleedingPlayer).loosingHealth(1)
+        return this.copy(players = players.updatePlayer(player))
+    }
+
 }
 
 data class EndGame(val players: TwoPlayers, val killed: String) : Game()

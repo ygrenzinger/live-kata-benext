@@ -31,18 +31,18 @@ data class GameAggregate(
                         Either.left("card ${card()} is not in hand")
                     }
                     else -> {
-                        val events = mutableListOf<Event>(DamageDealtWithCard(
-                            gameId,
-                            card,
-                            game.active().username,
-                            game.opponent().username
-                        ))
+                        val events = mutableListOf<Event>(
+                            DamageDealtWithCard(
+                                gameId,
+                                card,
+                                game.active().username,
+                                game.opponent().username
+                            )
+                        )
                         if (game.opponent().health - card() <= 0) {
                             events.add(PlayerKilled(gameId, game.opponent().username))
                         }
-                        Either.right(
-                            events
-                        )
+                        Either.right(events)
                     }
                 }
             }
@@ -65,8 +65,23 @@ data class GameAggregate(
     }
 
     private fun startTurn(player: Player): Either<String, List<Event>> {
-        val (deck, cards) = cardDealer(player.deck, 1)
-        return Either.right(listOf(TurnStarted(gameId, player.username, deck, player.hand.plus(cards))))
+        return Either.right(
+            when {
+                player.health == 0 -> {
+                    listOf(PlayerBleedToDeath(gameId, player.username))
+                }
+                player.deck.isEmpty() -> {
+                    listOf(
+                        PlayerBleed(gameId, player.username),
+                        TurnStarted(gameId, player.username, player.deck, player.hand)
+                    )
+                }
+                else -> {
+                    val (deck, cards) = cardDealer(player.deck, 1)
+                    listOf(TurnStarted(gameId, player.username, deck, player.hand.plus(cards)))
+                }
+            }
+        )
     }
 
     private fun startGame(): Either<String, List<Event>> {
@@ -122,6 +137,8 @@ data class GameAggregate(
                     )
                 )
                 is PlayerKilled -> this.copy(game = EndGame(game.players, event.playerKilled))
+                is PlayerBleed -> this.copy(game = game.playerBleed(event.player))
+                is PlayerBleedToDeath -> this.copy(game = EndGame(game.players, event.playerKilled))
             }
             is EndGame -> this
         }
