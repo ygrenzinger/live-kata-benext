@@ -96,7 +96,12 @@ class GameAggregateTest : StringSpec({
                 (1..7).flatMap {
                     listOf(
                         DamageDealtWithCard(gameId, Card(it), "A", "B"),
-                        TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5 + it)), Hand(ORIGINAL_DECK().take(5 + it))),
+                        TurnStarted(
+                            gameId,
+                            "B",
+                            Deck(ORIGINAL_DECK().drop(5 + it)),
+                            Hand(ORIGINAL_DECK().take(5 + it))
+                        ),
                         TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(4 + it)), Hand(ORIGINAL_DECK().take(4 + it)))
                     )
 
@@ -109,20 +114,33 @@ class GameAggregateTest : StringSpec({
             )
     }
 
-    "Bleeding" {
-        val bleedingEvents: List<Event> = firstTurnStarted(gameId) +
-                (1..30).flatMap {
-                    listOf(
-                        TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5 + it)), Hand(ORIGINAL_DECK().take(5 + it))),
-                        TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(4 + it)), Hand(ORIGINAL_DECK().take(4 + it)))
-                    )
+    "Discarding card" {
+        val events = firstTurnStarted(gameId) + listOf(
+            TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5))),
+            TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5)))
+        )
+        given(gameId, events)
+            .`when`(SwitchPlayer(gameId))
+            .then(
+                TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(6)), Hand(ORIGINAL_DECK().take(5)))
+            )
+    }
 
-                }
+    "Bleeding" {
+        val bleedingEvents: List<Event> = firstTurnStarted(gameId) + listOf(
+            TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5))),
+            TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5)))
+        ) + (1..29).flatMap {
+            listOf(
+                TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5 + it)), Hand(ORIGINAL_DECK().take(5))),
+                TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(5 + it)), Hand(ORIGINAL_DECK().take(5)))
+            )
+        }
         given(gameId, bleedingEvents)
             .`when`(SwitchPlayer(gameId))
             .then(
                 PlayerBleed(gameId, players.second),
-                TurnStarted(gameId, "B", Deck(emptyList()), Hand(ORIGINAL_DECK()))
+                TurnStarted(gameId, "B", Deck(emptyList()), Hand(ORIGINAL_DECK().take(5)))
             )
     }
 

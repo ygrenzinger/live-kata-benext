@@ -29,7 +29,7 @@ data class TurnStarted(
 
 data class DamageDealtWithCard(
     override val aggregateIdentifier: UUID,
-    val cardUsed: Card,
+    val card: Card,
     val playerAttacking: String,
     val playerAttacked: String
 ) : Event()
@@ -48,4 +48,3 @@ data class PlayerBleedToDeath(
     override val aggregateIdentifier: UUID,
     val playerKilled: String
 ) : Event()
-
