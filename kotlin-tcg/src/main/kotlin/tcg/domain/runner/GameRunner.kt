@@ -23,6 +23,7 @@ class GameRunner(
     fun play() {
         var input = inputRetriever.retrieveInput()
         while (input != "exit") {
+            gamePrinter.clear()
             gameAggregate = interpret(input).flatMap {
                 applyCommands(gameAggregate, it)
             }.getOrHandle {
@@ -38,8 +39,8 @@ class GameRunner(
     }
 
     private fun applyCommands(gameAggregate: GameAggregate, commands: List<Command>): Either<String, GameAggregate> {
-        val start = applyCommand(gameAggregate, commands.first())
-        return commands.drop(1).fold(start) { acc, command -> acc.flatMap { applyCommand(it, command) } }
+        val initial = applyCommand(gameAggregate, commands.first())
+        return commands.drop(1).fold(initial) { acc, command -> acc.flatMap { applyCommand(it, command) } }
     }
 
     private fun applyCommand(gameAggregate: GameAggregate, command: Command): Either<String, GameAggregate> {
@@ -52,14 +53,25 @@ class GameRunner(
     }
 
     private fun interpret(input: String): Either<String, List<Command>> {
-        return when (input) {
-            "create" -> {
+        return when {
+            input == "create" -> {
                 val playerA = inputRetriever.retrieveInput("first player name ?")
                 val playerB = inputRetriever.retrieveInput("second player name ?")
                 Either.right(listOf(
                     CreateGame(gameId, Pair(playerA, playerB)),
                     StartGame(gameId),
                     FirstTurn(gameId)
+                ))
+            }
+            input == "next" -> {
+                Either.right(listOf(
+                    SwitchPlayer(gameId)
+                ))
+            }
+            input.startsWith("attack") -> {
+                val value = Integer.parseInt(input.last().toString())
+                Either.right(listOf(
+                    DealDamageWithCard(gameId, Card(value))
                 ))
             }
             else -> {

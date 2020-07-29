@@ -12,7 +12,7 @@ data class HistoryProjection(val lines: List<String> = emptyList()) : Projection
             is GameCreated -> "Game created with players ${event.usernames.first} and ${event.usernames.second}"
             is GameStarted -> "Game started with ${event.firstPlayer} as first active player"
             is TurnStarted -> "Active player is now ${event.player}"
-//            is DamageDealtWithCard -> TODO()
+            is DamageDealtWithCard -> "Player ${event.playerAttacking} dealing ${event.card()} damage"
 //            is PlayerKilled -> TODO()
 //            is PlayerBleed -> TODO()
 //            is PlayerBleedToDeath -> TODO()

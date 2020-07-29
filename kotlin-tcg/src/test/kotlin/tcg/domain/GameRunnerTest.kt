@@ -2,6 +2,7 @@ package tcg.domain
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldEndWith
 import tcg.domain.runner.GamePrinter
 import tcg.domain.runner.InputRetriever
 import tcg.domain.runner.GameRunner
@@ -29,6 +30,26 @@ class GameRunnerTest : StringSpec({
         )
         gamePrinter.lines() shouldContainInOrder expectedLines
     }
+
+    "Second player dealing damage game" {
+        val inputRetriever = FakeInputRetriever()
+        val gamePrinter = FakeGamePrinter()
+        inputRetriever.addInput("create")
+        inputRetriever.addInput("A")
+        inputRetriever.addInput("B")
+        inputRetriever.addInput("next")
+        inputRetriever.addInput("attack 1")
+        val runner = GameRunner(UUID.randomUUID(), inputRetriever, gamePrinter, InMemoryEventStore(), { players -> players.first }, { deck, n -> deck.take(n) })
+        runner.play()
+        val expectedLines = listOf(
+            "Active player is now B",
+            "Player B dealing 1 damage",
+            "Game state",
+            "Player A - Health 29/30 - Mana 1/1 - Hand (0,0,1,1) - Deck (2,2,2,3,3,3,3,4,4,4,5,5,6,6,7,8)",
+            "active : Player B - Health 30/30 - Mana 0/1 - Hand (0,0,1,2) - Deck (2,2,3,3,3,3,4,4,4,5,5,6,6,7,8)"
+        )
+        gamePrinter.lines() shouldContainInOrder expectedLines
+    }
 })
 
 class FakeGamePrinter : GamePrinter {
@@ -37,6 +58,10 @@ class FakeGamePrinter : GamePrinter {
 
     override fun print(line: String) {
         this.lines.add(line)
+    }
+
+    override fun clear() {
+        lines.clear()
     }
 
     fun lines() = lines
