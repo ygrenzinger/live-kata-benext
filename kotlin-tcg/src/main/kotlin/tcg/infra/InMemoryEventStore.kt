@@ -1,18 +1,18 @@
 package tcg.infra
 
 import tcg.domain.Event
-import tcg.domain.EventStore
+import tcg.domain.runner.EventStore
 import java.util.*
 
-class InMemoryEventStore : EventStore{
+class InMemoryEventStore : EventStore() {
     private val data = mutableMapOf<UUID, List<Event>>()
 
-    override fun storeEvent(event: Event) {
-        data.compute(event.aggregateIdentifier) { _, events ->
-            if (events.isNullOrEmpty()) {
-                listOf(event)
+    override fun persistEvents(aggregateIdentifier: UUID, events: List<Event>) {
+        data.compute(aggregateIdentifier) { _, existingEvents ->
+            if (existingEvents.isNullOrEmpty()) {
+                events
             } else {
-                events + event
+                existingEvents + events
             }
         }
     }

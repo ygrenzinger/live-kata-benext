@@ -18,6 +18,9 @@ data class Player(
     fun loosingMana(value: Int) = this.copy(filledManaSlot = filledManaSlot - value)
     fun refillMana(): Player = this.copy(filledManaSlot = totalManaSlot)
 
+    fun describe() =
+        "Player $username - Health $health/30 - Mana $filledManaSlot/$totalManaSlot - Hand ${hand.describe()} - Deck ${deck.describe()}"
+
     companion object {
         val ORIGINAL_DECK = Deck(listOf(0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8).convert())
     }

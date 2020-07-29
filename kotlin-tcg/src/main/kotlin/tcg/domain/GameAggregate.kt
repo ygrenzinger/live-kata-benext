@@ -127,7 +127,7 @@ data class GameAggregate(
             gameId: UUID,
             chooseFirstPlayer: (players: TwoPlayers) -> Player,
             cardDealer: (Deck, Int) -> Pair<Deck, List<Card>>,
-            events: List<Event>
+            events: List<Event> = emptyList()
         ) =
             events.fold(GameAggregate(gameId, chooseFirstPlayer, cardDealer))
             { aggregate, event -> aggregate.evolve(event) }

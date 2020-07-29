@@ -1,7 +1,12 @@
 package tcg.domain
 
-sealed class Game() {
-    fun evolve(event: Event): Game {
+import tcg.domain.runner.GamePrinter
+import tcg.domain.runner.Projection
+
+sealed class Game() : Projection {
+    override val name: String = "game state projection"
+
+    override fun evolve(event: Event): Game {
         return when (this) {
             is NoGame -> when (event) {
                 is GameCreated -> createGame(event.usernames)
@@ -28,6 +33,10 @@ sealed class Game() {
 object NoGame : Game() {
     fun createGame(usernames: Pair<String, String>) =
         CreatingGame(TwoPlayers(Player(usernames.first), Player(usernames.second)))
+
+    override fun printOn(gamePrinter: GamePrinter) {
+        gamePrinter.print("Waiting for players")
+    }
 }
 
 data class CreatingGame(val players: TwoPlayers) : Game() {
@@ -37,6 +46,10 @@ data class CreatingGame(val players: TwoPlayers) : Game() {
         val second = players.retrieveOther(event.firstPlayer)
             .drawCards(event.secondPlayerDeck, event.secondPlayerHand)
         return RunningGame(TwoPlayers(first, second), first.username)
+    }
+
+    override fun printOn(gamePrinter: GamePrinter) {
+        gamePrinter.print("Players ${players.first.username} and ${players.second.username} waiting")
     }
 }
 
@@ -71,6 +84,23 @@ data class RunningGame(val players: TwoPlayers, val activePlayer: String) : Game
         return this.copy(players = players.updatePlayer(player))
     }
 
+    override fun printOn(gamePrinter: GamePrinter) {
+        gamePrinter.print(describePlayer(players.first))
+        gamePrinter.print(describePlayer(players.second))
+    }
+
+    private fun describePlayer(player: Player) =
+        if (activePlayer == player.username) {
+            "active : " + player.describe()
+        } else {
+            player.describe()
+        }
+
 }
 
-data class EndGame(val players: TwoPlayers, val killed: String) : Game()
+data class EndGame(val players: TwoPlayers, val killed: String) : Game() {
+
+    override fun printOn(gamePrinter: GamePrinter) {
+        gamePrinter.print("Players ${players.first.username} and ${players.second.username} waiting")
+    }
+}
