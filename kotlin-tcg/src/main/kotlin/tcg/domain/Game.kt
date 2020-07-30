@@ -101,6 +101,14 @@ data class RunningGame(val players: TwoPlayers, val activePlayer: String) : Game
 data class EndGame(val players: TwoPlayers, val killed: String) : Game() {
 
     override fun printOn(gamePrinter: GamePrinter) {
-        gamePrinter.print("Players ${players.first.username} and ${players.second.username} waiting")
+        gamePrinter.print(describePlayer(players.first))
+        gamePrinter.print(describePlayer(players.second))
     }
+
+    private fun describePlayer(player: Player) =
+        if (killed == player.username) {
+            "dead : " + player.describe()
+        } else {
+            "winner : " + player.describe()
+        }
 }
