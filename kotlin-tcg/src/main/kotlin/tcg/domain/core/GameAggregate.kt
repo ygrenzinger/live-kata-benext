@@ -1,4 +1,4 @@
-package tcg.domain
+package tcg.domain.core
 
 import arrow.core.Either
 import java.util.*
@@ -42,7 +42,12 @@ data class GameAggregate(
                             )
                         )
                         if (gameState.opponent().health - card() <= 0) {
-                            events.add(PlayerKilled(gameId, gameState.opponent().username))
+                            events.add(
+                                PlayerKilled(
+                                    gameId,
+                                    gameState.opponent().username
+                                )
+                            )
                         }
                         Either.right(events)
                     }
@@ -75,7 +80,12 @@ data class GameAggregate(
                 player.deck.isEmpty() -> {
                     listOf(
                         PlayerBleed(gameId, player.username),
-                        TurnStarted(gameId, player.username, player.deck, player.hand)
+                        TurnStarted(
+                            gameId,
+                            player.username,
+                            player.deck,
+                            player.hand
+                        )
                     )
                 }
                 else -> {

@@ -1,4 +1,4 @@
-package tcg.domain
+package tcg.domain.core
 
 import java.util.*
 

@@ -1,4 +1,4 @@
-package tcg.domain
+package tcg.domain.core
 
 import arrow.core.Either
 import io.kotest.matchers.shouldBe
@@ -9,12 +9,14 @@ object EventSourcingBDD {
     lateinit var result: Either<String, List<Event>>
 
     fun given(gameId: UUID, vararg events: Event): EventSourcingBDD {
-        gameAggregate = createAggregate(gameId, events.toList())
+        gameAggregate =
+            createAggregate(gameId, events.toList())
         return this
     }
 
     fun given(gameId: UUID, events: List<Event>): EventSourcingBDD {
-        gameAggregate = createAggregate(gameId, events)
+        gameAggregate =
+            createAggregate(gameId, events)
         return this
     }
 

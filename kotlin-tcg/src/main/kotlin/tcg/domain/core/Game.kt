@@ -1,4 +1,4 @@
-package tcg.domain
+package tcg.domain.core
 
 import tcg.domain.runner.GamePrinter
 import tcg.domain.runner.Projection
@@ -32,7 +32,12 @@ sealed class Game() : Projection {
 
 object NoGame : Game() {
     fun createGame(usernames: Pair<String, String>) =
-        CreatingGame(TwoPlayers(Player(usernames.first), Player(usernames.second)))
+        CreatingGame(
+            TwoPlayers(
+                Player(usernames.first),
+                Player(usernames.second)
+            )
+        )
 
     override fun printOn(gamePrinter: GamePrinter) {
         gamePrinter.print("Waiting for players")

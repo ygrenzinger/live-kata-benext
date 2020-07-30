@@ -1,7 +1,7 @@
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import tcg.domain.Player
+import tcg.domain.core.Player
 
 class PlayerTest : StringSpec({
     lateinit var player: Player

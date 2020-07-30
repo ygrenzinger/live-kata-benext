@@ -1,7 +1,6 @@
-package tcg.domain
+package tcg.domain.runner
 
-import tcg.domain.runner.GamePrinter
-import tcg.domain.runner.Projection
+import tcg.domain.core.*
 
 data class HistoryProjection(val lines: List<String> = emptyList()) : Projection {
 

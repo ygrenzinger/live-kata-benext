@@ -1,11 +1,8 @@
-package tcg.domain
+package tcg.domain.runner
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContainInOrder
-import io.kotest.matchers.collections.shouldEndWith
-import tcg.domain.runner.GamePrinter
-import tcg.domain.runner.InputRetriever
-import tcg.domain.runner.GameRunner
+import tcg.domain.core.Player
 import tcg.infra.InMemoryEventStore
 import java.util.*
 
@@ -14,10 +11,14 @@ class GameRunnerTest : StringSpec({
     "creating game" {
         val inputRetriever = FakeInputRetriever()
         val gamePrinter = FakeGamePrinter()
-        inputRetriever.addInput("create")
-        inputRetriever.addInput("A")
-        inputRetriever.addInput("B")
-        val runner = GameRunner(UUID.randomUUID(), inputRetriever, gamePrinter, InMemoryEventStore(), { players -> players.first }, { deck, n -> deck.take(n) })
+        creatingGame(inputRetriever)
+        val runner = GameRunner(
+            UUID.randomUUID(),
+            inputRetriever,
+            gamePrinter,
+            InMemoryEventStore(),
+            { players -> players.first },
+            { deck, n -> deck.take(n) })
         runner.play()
         val expectedLines = listOf(
             "Game history",
@@ -34,12 +35,16 @@ class GameRunnerTest : StringSpec({
     "Second player dealing 1 damage" {
         val inputRetriever = FakeInputRetriever()
         val gamePrinter = FakeGamePrinter()
-        inputRetriever.addInput("create")
-        inputRetriever.addInput("A")
-        inputRetriever.addInput("B")
+        creatingGame(inputRetriever)
         inputRetriever.addInput("next")
         inputRetriever.addInput("attack 1")
-        val runner = GameRunner(UUID.randomUUID(), inputRetriever, gamePrinter, InMemoryEventStore(), { players -> players.first }, { deck, n -> deck.take(n) })
+        val runner = GameRunner(
+            UUID.randomUUID(),
+            inputRetriever,
+            gamePrinter,
+            InMemoryEventStore(),
+            { players -> players.first },
+            { deck, n -> deck.take(n) })
         runner.play()
         val expectedLines = listOf(
             "Active player is now B",
@@ -54,20 +59,15 @@ class GameRunnerTest : StringSpec({
     "First player killing second player" {
         val inputRetriever = FakeInputRetriever()
         val gamePrinter = FakeGamePrinter()
-        inputRetriever.addInput("create")
-        inputRetriever.addInput("A")
-        inputRetriever.addInput("B")
-        var totalDamage = 0
-        var deck = Player.ORIGINAL_DECK().drop(2)
-        while (totalDamage < 30) {
-            val card = deck.first()
-            inputRetriever.addInput("attack ${card()}")
-            deck = deck.drop(1)
-            totalDamage += card()
-            inputRetriever.addInput("next")
-            inputRetriever.addInput("next")
-        }
-        val runner = GameRunner(UUID.randomUUID(), inputRetriever, gamePrinter, InMemoryEventStore(), { players -> players.first }, { deck, n -> deck.take(n) })
+        creatingGame(inputRetriever)
+        killingPlayer(inputRetriever)
+        val runner = GameRunner(
+            UUID.randomUUID(),
+            inputRetriever,
+            gamePrinter,
+            InMemoryEventStore(),
+            { players -> players.first },
+            { deck, n -> deck.take(n) })
         runner.play()
         val expectedLines = listOf(
             "Player A dealing 4 damage",
@@ -79,6 +79,25 @@ class GameRunnerTest : StringSpec({
         gamePrinter.lines() shouldContainInOrder expectedLines
     }
 })
+
+private fun killingPlayer(inputRetriever: FakeInputRetriever) {
+    var totalDamage = 0
+    var deck = Player.ORIGINAL_DECK().drop(2)
+    while (totalDamage < 30) {
+        val card = deck.first()
+        inputRetriever.addInput("attack ${card()}")
+        deck = deck.drop(1)
+        totalDamage += card()
+        inputRetriever.addInput("next")
+        inputRetriever.addInput("next")
+    }
+}
+
+private fun creatingGame(inputRetriever: FakeInputRetriever) {
+    inputRetriever.addInput("create")
+    inputRetriever.addInput("A")
+    inputRetriever.addInput("B")
+}
 
 class FakeGamePrinter : GamePrinter {
 

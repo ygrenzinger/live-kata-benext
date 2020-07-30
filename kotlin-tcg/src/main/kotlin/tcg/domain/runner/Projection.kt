@@ -1,6 +1,6 @@
 package tcg.domain.runner
 
-import tcg.domain.Event
+import tcg.domain.core.Event
 
 interface Projection {
     val name: String

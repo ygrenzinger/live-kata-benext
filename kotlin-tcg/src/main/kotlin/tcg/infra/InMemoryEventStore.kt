@@ -1,6 +1,6 @@
 package tcg.infra
 
-import tcg.domain.Event
+import tcg.domain.core.Event
 import tcg.domain.runner.EventStore
 import java.util.*
 

@@ -3,7 +3,7 @@ package tcg.domain.runner
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.getOrHandle
-import tcg.domain.*
+import tcg.domain.core.*
 import java.util.*
 
 class GameRunner(
@@ -21,7 +21,7 @@ class GameRunner(
     }
 
     fun play() {
-        var input = inputRetriever.retrieveInput()
+        var input = retrieveUserCommand()
         while (input != "exit") {
             gamePrinter.clear()
             gameAggregate = interpret(input).flatMap {
@@ -34,9 +34,12 @@ class GameRunner(
             eventStore.get(HistoryProjection.NAME)?.printOn(gamePrinter)
             gamePrinter.print("Game state")
             gameAggregate.gameState.printOn(gamePrinter)
-            input = inputRetriever.retrieveInput()
+            input = retrieveUserCommand()
         }
     }
+
+    private fun retrieveUserCommand() =
+        inputRetriever.retrieveInput("What do you want to do ? 'create' 'next' 'attack X' 'exit'")
 
     private fun applyCommands(gameAggregate: GameAggregate, commands: List<Command>): Either<String, GameAggregate> {
         val initial = applyCommand(gameAggregate, commands.first())

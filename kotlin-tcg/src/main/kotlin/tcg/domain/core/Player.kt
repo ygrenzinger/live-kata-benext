@@ -1,4 +1,4 @@
-package tcg.domain
+package tcg.domain.core
 
 data class Player(
     val username: String,
@@ -22,6 +22,29 @@ data class Player(
         "Player $username - Health $health/30 - Mana $filledManaSlot/$totalManaSlot - Hand ${hand.describe()} - Deck ${deck.describe()}"
 
     companion object {
-        val ORIGINAL_DECK = Deck(listOf(0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8).convert())
+        val ORIGINAL_DECK = Deck(
+            listOf(
+                0,
+                0,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                5,
+                5,
+                6,
+                6,
+                7,
+                8
+            ).convert()
+        )
     }
 }

@@ -1,4 +1,4 @@
-package tcg.domain
+package tcg.domain.core
 
 data class TwoPlayers(val first: Player, val second: Player) {
 

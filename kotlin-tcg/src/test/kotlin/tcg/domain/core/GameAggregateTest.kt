@@ -1,8 +1,8 @@
-package tcg.domain
+package tcg.domain.core
 
 import io.kotest.core.spec.style.StringSpec
-import tcg.domain.EventSourcingBDD.given
-import tcg.domain.Player.Companion.ORIGINAL_DECK
+import tcg.domain.core.EventSourcingBDD.given
+import tcg.domain.core.Player.Companion.ORIGINAL_DECK
 import java.util.*
 
 class GameAggregateTest : StringSpec({
@@ -28,7 +28,11 @@ class GameAggregateTest : StringSpec({
         return listOf(
             GameCreated(gameId, players),
             buildGameStarted(gameId),
-            TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(4)), Hand(ORIGINAL_DECK().take(4)))
+            TurnStarted(
+                gameId, "A",
+                Deck(ORIGINAL_DECK().drop(4)),
+                Hand(ORIGINAL_DECK().take(4))
+            )
         )
     }
 
@@ -55,7 +59,13 @@ class GameAggregateTest : StringSpec({
             GameCreated(gameId, players),
             buildGameStarted(gameId)
         ).`when`(FirstTurn(gameId))
-            .then(TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(4)), Hand(ORIGINAL_DECK().take(4))))
+            .then(
+                TurnStarted(
+                    gameId, "A",
+                    Deck(ORIGINAL_DECK().drop(4)),
+                    Hand(ORIGINAL_DECK().take(4))
+                )
+            )
     }
 
     "Playing card with enough mana" {
@@ -87,7 +97,11 @@ class GameAggregateTest : StringSpec({
         given(gameId, firstTurnStarted(gameId))
             .`when`(SwitchPlayer(gameId))
             .then(
-                TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5)))
+                TurnStarted(
+                    gameId, "B",
+                    Deck(ORIGINAL_DECK().drop(5)),
+                    Hand(ORIGINAL_DECK().take(5))
+                )
             )
     }
 
@@ -102,7 +116,11 @@ class GameAggregateTest : StringSpec({
                             Deck(ORIGINAL_DECK().drop(5 + it)),
                             Hand(ORIGINAL_DECK().take(5 + it))
                         ),
-                        TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(4 + it)), Hand(ORIGINAL_DECK().take(4 + it)))
+                        TurnStarted(
+                            gameId, "A",
+                            Deck(ORIGINAL_DECK().drop(4 + it)),
+                            Hand(ORIGINAL_DECK().take(4 + it))
+                        )
                     )
 
                 }
@@ -116,31 +134,63 @@ class GameAggregateTest : StringSpec({
 
     "Discarding card" {
         val events = firstTurnStarted(gameId) + listOf(
-            TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5))),
-            TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5)))
+            TurnStarted(
+                gameId, "B",
+                Deck(ORIGINAL_DECK().drop(5)),
+                Hand(ORIGINAL_DECK().take(5))
+            ),
+            TurnStarted(
+                gameId, "A",
+                Deck(ORIGINAL_DECK().drop(5)),
+                Hand(ORIGINAL_DECK().take(5))
+            )
         )
         given(gameId, events)
             .`when`(SwitchPlayer(gameId))
             .then(
-                TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(6)), Hand(ORIGINAL_DECK().take(5)))
+                TurnStarted(
+                    gameId, "B",
+                    Deck(ORIGINAL_DECK().drop(6)),
+                    Hand(ORIGINAL_DECK().take(5))
+                )
             )
     }
 
     "Bleeding" {
         val bleedingEvents: List<Event> = firstTurnStarted(gameId) + listOf(
-            TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5))),
-            TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(5)), Hand(ORIGINAL_DECK().take(5)))
+            TurnStarted(
+                gameId, "B",
+                Deck(ORIGINAL_DECK().drop(5)),
+                Hand(ORIGINAL_DECK().take(5))
+            ),
+            TurnStarted(
+                gameId, "A",
+                Deck(ORIGINAL_DECK().drop(5)),
+                Hand(ORIGINAL_DECK().take(5))
+            )
         ) + (1..29).flatMap {
             listOf(
-                TurnStarted(gameId, "B", Deck(ORIGINAL_DECK().drop(5 + it)), Hand(ORIGINAL_DECK().take(5))),
-                TurnStarted(gameId, "A", Deck(ORIGINAL_DECK().drop(5 + it)), Hand(ORIGINAL_DECK().take(5)))
+                TurnStarted(
+                    gameId, "B",
+                    Deck(ORIGINAL_DECK().drop(5 + it)),
+                    Hand(ORIGINAL_DECK().take(5))
+                ),
+                TurnStarted(
+                    gameId, "A",
+                    Deck(ORIGINAL_DECK().drop(5 + it)),
+                    Hand(ORIGINAL_DECK().take(5))
+                )
             )
         }
         given(gameId, bleedingEvents)
             .`when`(SwitchPlayer(gameId))
             .then(
                 PlayerBleed(gameId, players.second),
-                TurnStarted(gameId, "B", Deck(emptyList()), Hand(ORIGINAL_DECK().take(5)))
+                TurnStarted(
+                    gameId, "B",
+                    Deck(emptyList()),
+                    Hand(ORIGINAL_DECK().take(5))
+                )
             )
     }
 

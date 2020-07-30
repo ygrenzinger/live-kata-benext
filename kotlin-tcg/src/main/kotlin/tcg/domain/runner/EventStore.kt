@@ -1,7 +1,7 @@
 package tcg.domain.runner
 
 import arrow.core.Either
-import tcg.domain.Event
+import tcg.domain.core.Event
 import java.util.*
 
 abstract class EventStore {
